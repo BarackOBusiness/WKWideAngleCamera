@@ -34,7 +34,7 @@ public class WideAnglePlugin : BaseUnityPlugin
         );
         fieldOfView = Config.Bind(
             "General", "Field of view", 135.0f,
-            "The vertical field of view of the camera in degrees"
+            "The vertical field of view of the camera in degrees."
         );
 
         bool bundleStatus = LoadBundleAssets();

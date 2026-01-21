@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>WideAngleCamera</AssemblyName>
     <Product>A White Knuckle mod to implement stereographic camera projection for wider angle views</Product>
@@ -12,8 +13,31 @@
       https://nuget.bepinex.dev/v3/index.json;
       https://nuget.samboy.dev/v3/index.json
     </RestoreAdditionalProjectSources>
-    <RootNamespace>HighFOV</RootNamespace>
+    <RootNamespace>WideAngleCamera</RootNamespace>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <OutputPath>bin/Debug/$(MSBuildProjectName)/</OutputPath>
+  </PropertyGroup>
+  <Target Name="CopyDebugAssets" AfterTargets="Build" Condition="'$(Configuration)'=='Debug'">
+    <ItemGroup>
+      <DebugAssets Include="assets/stereoassets" />
+    </ItemGroup>
+    <Copy SourceFiles="@(DebugAssets)" DestinationFolder="$(OutDir)" />
+  </Target>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <OutputPath>bin/Release/$(MSBuildProjectName)</OutputPath>
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+  <Target Name="CopyReleaseAssets" AfterTargets="Build" Condition="'$(Configuration)'=='Release'">
+    <ItemGroup>
+      <DebugAssets Include="assets/stereoassets;resources/README.md;resources/icon.png;resources/manifest.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(DebugAssets)" DestinationFolder="$(OutDir)" />
+  </Target>
 
   <ItemGroup>
     <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
