@@ -57,5 +57,7 @@ public class StereographicCameraManager : MonoBehaviour {
 		cam.targetTexture = RT;
 		cam.cullingMask = perspective.cullingMask;
 		cam.clearFlags = perspective.clearFlags;
+		cam.depthTextureMode = DepthTextureMode.Depth;
+		cam.depth = 1;
 	}
 }

@@ -25,11 +25,11 @@ public class WideAnglePlugin : BaseUnityPlugin
 
         resolution = Config.Bind(
             "General", "Resolution", 512,
-            "The default side length of a face on the cubemap"
+            "The default side length of a face on the cubemap."
         );
         fieldOfView = Config.Bind(
             "General", "Field of view", 170.0f,
-            "The field of view of the larger axis of your display, for pretty much everybody this will be horizontal field of view"
+            "The field of view of the larger axis of your display, for pretty much everyone this will be horizontal fov."
         );
 
         bool bundleStatus = LoadBundleAssets();
@@ -41,21 +41,26 @@ public class WideAnglePlugin : BaseUnityPlugin
     }
 
     private void OnSceneLoad(Scene scene, LoadSceneMode mode) {
-        if (scene.name == "Game-Main" || scene.name == "Playground") {
-            Transform camParent = Camera.main.transform;
-            GameObject camManager = Instantiate(stereoCam, camParent);
-            GameObject projectorScreen = Instantiate(projector, camParent);
-            projectorScreen.layer = 31;
-            projectorScreen.transform.localPosition = new Vector3(0f, 0f, 0.5f);
-            projectorScreen.transform.localRotation = Quaternion.Euler(0f, 0f, 180f);
-            projectorScreen.transform.localScale = new Vector3(Camera.main.aspect, 1f, 1f);
-            camManager.AddComponent<StereographicCameraManager>().Init(
-                projectorScreen.GetComponent<MeshRenderer>(), resolution.Value, fieldOfView.Value
-            );
-            Camera.main.orthographic = true;
-            Camera.main.orthographicSize = 0.5f;
-            Camera.main.cullingMask = 1 << 31;
+        Logger.LogInfo($"[{Time.time}]: {scene.name}");
+        if (scene.name == "Main-Menu" || scene.name == "Game-Main" || scene.name == "Playground") {
+            SetupScene();
         }
+    }
+
+    private void SetupScene() {
+        Transform camParent = Camera.main.transform;
+        GameObject camManager = Instantiate(stereoCam, camParent);
+        GameObject projectorScreen = Instantiate(projector, camParent);
+        projectorScreen.layer = 31;
+        projectorScreen.transform.localPosition = new Vector3(0f, 0f, 0.5f);
+        projectorScreen.transform.localRotation = Quaternion.Euler(0f, 0f, 180f);
+        projectorScreen.transform.localScale = new Vector3(Camera.main.aspect, 1f, 1f);
+        camManager.AddComponent<StereographicCameraManager>().Init(
+            projectorScreen.GetComponent<MeshRenderer>(), resolution.Value, fieldOfView.Value
+        );
+        Camera.main.orthographic = true;
+        Camera.main.orthographicSize = 0.5f;
+        Camera.main.cullingMask = 1 << 31;
     }
 
     private bool LoadBundleAssets() {
