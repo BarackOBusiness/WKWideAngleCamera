@@ -6,14 +6,15 @@ using BepInEx.Configuration;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace HighFOV;
+namespace WideAngleCamera;
 
-[BepInPlugin("wk.barackobusiness.wideangle", "High FOV Camera", "0.1.0")]
+[BepInPlugin("wk.barackobusiness.wideangle", "Wide Angle Camera", "1.0.0")]
 public class WideAnglePlugin : BaseUnityPlugin
 {
     internal static new ManualLogSource Logger;
 
     private ConfigEntry<int> resolution;
+    private ConfigEntry<bool> useBackCam;
     private ConfigEntry<float> fieldOfView;
 
     private Material stereoMat;
@@ -27,9 +28,13 @@ public class WideAnglePlugin : BaseUnityPlugin
             "General", "Resolution", 512,
             "The default side length of a face on the cubemap."
         );
+        useBackCam = Config.Bind(
+            "General", "Enable backface", false,
+            "Whether to render behind the player or not, this option incurs additional performance cost and is only useful if using extreme fields of view at which distortion makes gameplay impractical."
+        );
         fieldOfView = Config.Bind(
-            "General", "Field of view", 170.0f,
-            "The field of view of the larger axis of your display, for pretty much everyone this will be horizontal fov."
+            "General", "Field of view", 135.0f,
+            "The vertical field of view of the camera in degrees"
         );
 
         bool bundleStatus = LoadBundleAssets();
@@ -41,8 +46,7 @@ public class WideAnglePlugin : BaseUnityPlugin
     }
 
     private void OnSceneLoad(Scene scene, LoadSceneMode mode) {
-        Logger.LogInfo($"[{Time.time}]: {scene.name}");
-        if (scene.name == "Main-Menu" || scene.name == "Game-Main" || scene.name == "Playground") {
+        if (scene.name != "Intro" && scene.name != "Main-Menu") {
             SetupScene();
         }
     }
@@ -56,7 +60,7 @@ public class WideAnglePlugin : BaseUnityPlugin
         projectorScreen.transform.localRotation = Quaternion.Euler(0f, 0f, 180f);
         projectorScreen.transform.localScale = new Vector3(Camera.main.aspect, 1f, 1f);
         camManager.AddComponent<StereographicCameraManager>().Init(
-            projectorScreen.GetComponent<MeshRenderer>(), resolution.Value, fieldOfView.Value
+            projectorScreen.GetComponent<MeshRenderer>(), useBackCam.Value, resolution.Value, fieldOfView.Value
         );
         Camera.main.orthographic = true;
         Camera.main.orthographicSize = 0.5f;

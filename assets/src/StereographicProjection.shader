@@ -75,7 +75,7 @@ Shader "Unlit/StereographicProjection"
                 p.x *= aspect;
     
                 // Apply FOV scaling to the CORRECTED coordinates
-                float fovRad = radians(_FOV / aspect * 0.25);
+                float fovRad = radians(_FOV * 0.25);
                 float scale = tan(fovRad);
                 p *= scale;
 
