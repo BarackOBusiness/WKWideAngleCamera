@@ -3,6 +3,7 @@ using System.Reflection;
 using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Configuration;
+using HarmonyLib;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -15,7 +16,6 @@ public class WideAnglePlugin : BaseUnityPlugin
 
     private ConfigEntry<int> resolution;
     private ConfigEntry<bool> useBackCam;
-    private ConfigEntry<float> fieldOfView;
 
     private Material stereoMat;
     private GameObject projector;
@@ -32,15 +32,13 @@ public class WideAnglePlugin : BaseUnityPlugin
             "General", "Enable backface", false,
             "Whether to render behind the player or not, this option incurs additional performance cost and is only useful if using extreme fields of view at which distortion makes gameplay impractical."
         );
-        fieldOfView = Config.Bind(
-            "General", "Field of view", 135.0f,
-            "The vertical field of view of the camera in degrees."
-        );
 
         bool bundleStatus = LoadBundleAssets();
 
         if (bundleStatus) {
             SceneManager.sceneLoaded += OnSceneLoad;
+            Harmony harmony = new Harmony("wk.barackobusiness.wideangle");
+            harmony.PatchAll(typeof(UT_CameraTakeoverPatches));
             Logger.LogInfo("Wide angle views are now possible.");
         }
     }
@@ -48,6 +46,15 @@ public class WideAnglePlugin : BaseUnityPlugin
     private void OnSceneLoad(Scene scene, LoadSceneMode mode) {
         if (scene.name != "Intro" && scene.name != "Main-Menu") {
             SetupScene();
+        }
+        // Disgusting vile behemoth just to expand the slider range, don't even worry about it
+        if (scene.name == "Main-Menu") {
+            GameObject slider = GameObject.Find("Canvas - Screens/Screens/Canvas - Screen - Settings/Settings Menu/SettingsParent/Settings Pane/Video Settings/Options Tab/Video/SliderAsset - FOV/Slider");
+            slider.GetComponent<DarkMachine.UI.SubmitSlider>().maxValue = 270f;
+        } else if (scene.name != "Intro") {
+            Transform pause = GameObject.Find("Pause").transform;
+            var slider = pause.GetChild(0).GetChild(3).GetChild(0).GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(7).GetChild(1);
+            slider.GetComponent<DarkMachine.UI.SubmitSlider>().maxValue = 270f;
         }
     }
 
@@ -60,7 +67,7 @@ public class WideAnglePlugin : BaseUnityPlugin
         projectorScreen.transform.localRotation = Quaternion.Euler(0f, 0f, 180f);
         projectorScreen.transform.localScale = new Vector3(Camera.main.aspect, 1f, 1f);
         camManager.AddComponent<StereographicCameraManager>().Init(
-            projectorScreen.GetComponent<MeshRenderer>(), useBackCam.Value, resolution.Value, fieldOfView.Value
+            projectorScreen.GetComponent<MeshRenderer>(), useBackCam.Value, resolution.Value
         );
         Camera.main.orthographic = true;
         Camera.main.orthographicSize = 0.5f;
