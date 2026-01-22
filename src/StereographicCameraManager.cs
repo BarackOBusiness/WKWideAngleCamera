@@ -88,8 +88,8 @@ public class StereographicCameraManager : MonoBehaviour {
 		// Live FOV reaction
 		if (!pauseFOVAdjust && !player.IsLocked()) {
 			curFOV = Mathf.Clamp(curFOV + player.curBuffs.GetBuff("addFOV"), 60f, 315f);
-			smoothedFOV = expDecay(smoothedFOV, curFOV + slowFOVAdjust, 16f, Time.deltaTime);
-			slowFOVAdjust = expDecay(slowFOVAdjust, 0f, 8f, Time.deltaTime);
+			smoothedFOV = expDecay(smoothedFOV, curFOV + slowFOVAdjust, 5f, Time.deltaTime);
+			slowFOVAdjust = expDecay(slowFOVAdjust, 0f, 1f, Time.deltaTime);
 			curFOV = SettingsManager.settings.playerFOV;
 			sprintFOV = curFOV + 15f;
 			if (!SettingsManager.settings.disableSprintFov) {
@@ -127,7 +127,7 @@ public class StereographicCameraManager : MonoBehaviour {
 		float timer = 0f;
 		pauseFOVAdjust = true;
 		while (timer < 1f) {
-			timer += Time.deltaTime * 5f;
+			timer += Time.deltaTime;
 			screen.SetFloat("_FOV", (expDecay(curFOV, target, 5f, timer)));
 			yield return new WaitForEndOfFrame();
 		}
