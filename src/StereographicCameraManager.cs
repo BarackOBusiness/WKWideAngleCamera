@@ -128,7 +128,7 @@ public class StereographicCameraManager : MonoBehaviour {
 		pauseFOVAdjust = true;
 		while (timer < 1f) {
 			timer += Time.deltaTime * 5f;
-			SetFOV(expDecay(curFOV, target, 5f, timer));
+			screen.SetFloat("_FOV", (expDecay(curFOV, target, 5f, timer)));
 			yield return new WaitForEndOfFrame();
 		}
 		pauseFOVAdjust = false;
