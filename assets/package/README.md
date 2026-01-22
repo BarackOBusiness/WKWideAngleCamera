@@ -1,6 +1,6 @@
 # White Knuckle Wide Angle Camera Mod
 A mod that implements stereographic projection to allow for much greater fields of view with minimal/more pleasant distortion.
-![](https://github.com/BarackOBusiness/WKWideAngleCamera/blob/master/resources/preview.avif?raw=true "Example of 180° camera in motion climbing the interlude to pipeworks")
+![](https://github.com/BarackOBusiness/WKWideAngleCamera/blob/master/assets/gallery/preview.avif?raw=true "Example of 180° camera in motion climbing the interlude to pipeworks")
 
 Specifics
 ---
