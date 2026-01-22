@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using System.Reflection;
 using BepInEx;
-using BepInEx.Logging;
 using BepInEx.Configuration;
 using HarmonyLib;
 using UnityEngine;
@@ -12,8 +11,6 @@ namespace WideAngleCamera;
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 public class WideAnglePlugin : BaseUnityPlugin
 {
-    internal static new ManualLogSource Logger;
-
     private ConfigEntry<int> resolution;
     private ConfigEntry<bool> useBackCam;
 
@@ -22,8 +19,6 @@ public class WideAnglePlugin : BaseUnityPlugin
     private GameObject stereoCam;
 
     private void Awake() {
-        Logger = base.Logger;
-
         resolution = Config.Bind(
             "General", "Resolution", 512,
             "The default side length of a face on the cubemap."
@@ -33,11 +28,9 @@ public class WideAnglePlugin : BaseUnityPlugin
             "Whether to render behind the player or not, this option incurs additional performance cost and is only useful if using extreme fields of view at which distortion makes gameplay impractical."
         );
 
-        bool bundleStatus = LoadBundleAssets();
-
-        if (bundleStatus) {
+        if (LoadBundleAssets()) {
             SceneManager.sceneLoaded += OnSceneLoad;
-            Harmony harmony = new Harmony("wk.barackobusiness.wideangle");
+            Harmony harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
             harmony.PatchAll(typeof(UT_CameraTakeoverPatches));
             Logger.LogInfo("Wide angle views are now possible.");
         }
