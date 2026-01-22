@@ -9,7 +9,7 @@ using UnityEngine.SceneManagement;
 
 namespace WideAngleCamera;
 
-[BepInPlugin("wk.barackobusiness.wideangle", "Wide Angle Camera", "1.0.0")]
+[BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 public class WideAnglePlugin : BaseUnityPlugin
 {
     internal static new ManualLogSource Logger;

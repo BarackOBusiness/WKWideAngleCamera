@@ -4,13 +4,10 @@ A mod that implements stereographic projection to allow for much greater fields 
 
 Specifics
 ---
-The mod currently features the wide angle camera in question fully functionally.
+The mod currently features the wide angle camera in question fully functionally. The FOV may be adjusted by the now expanded slider in the settings menu as usual. The FOV scales with sprint and consumable effects, and zooms to computer terminals appropriately.
+
 It supports configuration in the BepInEx configuration file via the following parameters:
-* The vertical field of view of the camera in degrees
-* Resolution of the cubemap, which generally scales the performance impact of this mod
+* Resolution of the cubemap, which generally scales the clarity to performance ratio of the camera (higher resolution is sharper, but more costly)
 * Whether to render behind the player, which only needs to be enabled if your fov is so high that you can see behind you
 
-It is missing a few quality of life fixes:
-* The FOV remains the same in computer terminals
-* The FOV does not scale with sprint and consumable effects
-* At higher FOV the hand grab sprites diverge from their actual position
+As of right now there is one known issue where hand grab sprites diverge from their actual position at very high FOV
