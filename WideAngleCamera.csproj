@@ -16,6 +16,7 @@
     <RootNamespace>WideAngleCamera</RootNamespace>
   </PropertyGroup>
 
+  <!-- Copies the assetbundle into the debug build folder to be archived together for manual installs -->
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
     <OutputPath>bin/Debug/$(MSBuildProjectName)/</OutputPath>
   </PropertyGroup>
@@ -26,18 +27,39 @@
     <Copy SourceFiles="@(DebugAssets)" DestinationFolder="$(OutDir)" />
   </Target>
 
+  <!-- Modifies release properties and copies thunderstore assets to be zipped up nicely -->
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <OutputPath>bin/Release/$(MSBuildProjectName)</OutputPath>
     <Optimize>true</Optimize>
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
-  <Target Name="CopyReleaseAssets" AfterTargets="Build" Condition="'$(Configuration)'=='Release'">
+  <Target Name="ReleaseOutput" AfterTargets="Build" Condition="'$(Configuration)'=='Release'">
     <ItemGroup>
       <DebugAssets Include="assets/stereoassets;resources/README.md;resources/icon.png;resources/manifest.json" />
+      <DepsJson Include="$(OutDir)*.deps.json">
     </ItemGroup>
     <Copy SourceFiles="@(DebugAssets)" DestinationFolder="$(OutDir)" />
+    <Delete Files="@(DepsJson)" />
   </Target>
+
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>lib/Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </Reference>
+    <Reference Include="ALINE">
+      <HintPath>lib/ALINE.dll</HintPath>
+      <Private>false</Private>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </Reference>
+    <Reference Include="DarkMachineUI">
+      <HintPath>lib/DarkMachineUI.dll</HintPath>
+      <Private>false</Private>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </Reference>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
