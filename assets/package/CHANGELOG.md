@@ -1,4 +1,9 @@
 # Changelog
+v1.1.1
+---
+- Matched camera field of view change speed to vanilla game
+- Fixed upgrade terminal animation smoothing
+
 v1.1.0
 ---
 - Camera now respects settings menu field of view slider, removed fov config option
