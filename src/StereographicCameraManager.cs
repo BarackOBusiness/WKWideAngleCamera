@@ -126,7 +126,9 @@ public class StereographicCameraManager : MonoBehaviour {
 	public IEnumerator LerpFOV(float target) {
 		float timer = 0f;
 		pauseFOVAdjust = true;
-		while (timer < 1f) {
+		// deltaTime is multiplied by 5 in the source, effectively dividing the time
+		// of the interpolation by 5
+		while (timer < 0.2f) {
 			timer += Time.deltaTime;
 			screen.SetFloat("_FOV", (expDecay(curFOV, target, 5f, timer)));
 			yield return new WaitForEndOfFrame();

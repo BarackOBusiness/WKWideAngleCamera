@@ -7,7 +7,10 @@ public static class UT_CameraTakeoverPatches {
 	[HarmonyPostfix]
 	public static void Postfix_Start(UT_CameraTakeover __instance) {
 		var wideCam = StereographicCameraManager.Instance;
+		// Don't need the smoothing on the deactivation event I think, the camera
+		// already tries to handle this and I think- counterintuitively- doing it
+		// here makes the transition less smooth even though it should neatly handle
+		// getting back to configured fov
 		__instance.activateEvent.AddListener(() => { wideCam.StartCoroutine(wideCam.LerpFOV(120.0f)); });
-		__instance.deactivateEvent.AddListener(() => { wideCam.StartCoroutine(wideCam.LerpFOV(SettingsManager.settings.playerFOV)); });
 	}
 }
