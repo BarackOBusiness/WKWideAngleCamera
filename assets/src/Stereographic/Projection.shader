@@ -1,11 +1,16 @@
 Shader "Custom/Stereographic" {
 Properties {
     _MainTex ("Cubemap", CUBE) = "" {}
-    _FOV ("Field of view (deg)", Range(1, 359)) = 140
+    _FOV ("Field of view (deg)", Range(1, 359)) = 160
 }
 
 SubShader {
     Tags { "RenderType" = "Opaque" }
+    Cull Off
+    ZTest Always
+    ZWrite Off
+    Lighting Off
+    Fog { Mode Off }
 
     Pass {
         CGPROGRAM
@@ -31,19 +36,17 @@ SubShader {
             {
                 float r2 = dot(p, p);
                 float denom = 1 + r2;
-                // x and z are flipped in unity coordinate system
-                // compared to this shader model
-                return float3(
-                    -2.0 * p.x / denom,
-                    2.0 * p.y / denom,
-                    -(r2 - 1.0) / denom
-                );
+                float3 dir;
+                dir.x = 2.0 * p.x / denom;
+                dir.y = 2.0 * p.y / denom;
+                dir.z = (r2 - 1.0) / denom;
+                return normalize(dir);
             }
             
             v2f vert (appdata v)
             {
                 v2f o;
-                o.pos = UnityObjectToClipPos(v.vertex);
+                o.pos = float4(v.vertex.xy, 0, 1);
                 o.uv = v.uv;
                 return o;
             }
@@ -51,11 +54,9 @@ SubShader {
             fixed4 frag (v2f i) : SV_Target
             {
                 // Convert the point on screen into centered plane coordinates
-                float2 p = i.uv * 2 - 1;
+                float2 p = i.uv * 2.0 - 1.0;
                 float aspect = _ScreenParams.x / _ScreenParams.y;
 
-                // Scale by FOV, might actually turn out to not be this formula
-                // for this projection
                 float fovRad = radians(_FOV);
                 float scale = tan(fovRad * 0.25);
                 // Field of view setting scales the greater axis of the display

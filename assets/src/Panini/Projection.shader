@@ -1,12 +1,17 @@
 Shader "Custom/Panini" {
 Properties {
     _MainTex ("Cubemap", CUBE) = "" {}
-    _FOV ("Field of view (deg)", Range(1,359)) = 140
+    _FOV ("Field of view (deg)", Range(1,359)) = 160
     _D ("Distance", Range(0.0,1.0)) = 1.0
 }
 
 SubShader {
     Tags { "RenderType" = "Opaque" }
+    Cull Off
+    ZTest Always
+    ZWrite Off
+    Lighting Off
+    Fog { Mode Off }
 
     Pass {
         CGPROGRAM
@@ -54,16 +59,16 @@ SubShader {
             float3 MapToSphere (float2 c)
             {
                 float3 dir;
-                dir.x = -(cos(c.y)*sin(c.x));
+                dir.x = cos(c.y)*sin(c.x);
                 dir.y = sin(c.y);
                 dir.z = cos(c.y)*cos(c.x);
-                return dir;
+                return normalize(dir);
             }
 
             v2f vert (appdata v)
             {
                 v2f o;
-                o.pos = UnityObjectToClipPos(v.vertex);
+                o.pos = float4(v.vertex.xy, 0, 1);
                 o.uv = v.uv;
                 return o;
             }
@@ -71,7 +76,7 @@ SubShader {
             fixed4 frag (v2f i) : SV_TARGET
             {
                 // Map point to centered view plane coordinates
-                float2 p = i.uv * 2 - 1;
+                float2 p = i.uv * 2.0 - 1.0;
                 float aspect = _ScreenParams.x / _ScreenParams.y;
 
                 // Compute edges of view into scaling factors
@@ -85,7 +90,6 @@ SubShader {
 
                 float h = p.x * h_edge;
                 float v = p.y * h_edge;
-                // Field of view setting scales the greater axis of the display
                 if (aspect > 1.0) {
                     v /= aspect;
                 } else {

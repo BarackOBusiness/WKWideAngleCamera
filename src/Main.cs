@@ -15,7 +15,6 @@ public class WideAnglePlugin : BaseUnityPlugin
     private ConfigEntry<bool> renderBackface;
     private ConfigEntry<Projection> projection;
 
-    private GameObject projector;
     private GameObject wideAngleCamera;
     private Shader wideAngleShader;
 
@@ -71,13 +70,10 @@ public class WideAnglePlugin : BaseUnityPlugin
             // Setup the camera
             Transform camParent = Camera.main.transform;
             // Setup screen
-            GameObject screen = GameObject.Instantiate(projector, camParent, false);
-            // Let's start with a simple debug shader, the basic texture
+            GameObject screen = SetupProjector();
             screen.GetComponent<MeshRenderer>().material = new Material(wideAngleShader);
-            screen.transform.localScale = new Vector3(Camera.main.aspect, 1.0f, 1.0f);
-            screen.transform.localRotation = Quaternion.Euler(0f, 0f, 180.0f);
-            screen.transform.localPosition = new Vector3(0f, 0f, 1.0f);
-            screen.name = "Projector Screen";
+            screen.transform.localPosition = new Vector3(0f, 0f, 0.5f);
+            screen.transform.SetParent(camParent, false);
             screen.layer = 31;
             // Setup camera
             GameObject cam = GameObject.Instantiate(wideAngleCamera, camParent, false);
@@ -85,10 +81,54 @@ public class WideAnglePlugin : BaseUnityPlugin
             CameraManager cMan = cam.AddComponent<CameraManager>();
             cMan.Init(screen.GetComponent<MeshRenderer>(), renderBackface.Value, (int)quality.Value);
             // Now finishing touches
+            Camera.main.nearClipPlane = 0.0f;
+            Camera.main.farClipPlane = 1.0f;
             Camera.main.cullingMask = 1 << 31;
             Camera.main.orthographic = true;
             Camera.main.orthographicSize = 0.75f;
+            Camera.main.useOcclusionCulling = false;
+            Camera.main.clearFlags = CameraClearFlags.Nothing; // This fixes the ZWrite problem
         }
+    }
+
+    // Constructs a GameObject with a fullscreen triangle mesh without any material
+    private GameObject SetupProjector() {
+        // Let us first generate the mesh
+        Mesh m = new Mesh();
+        m.name = "Triangle";
+
+        m.vertices = new Vector3[]
+        {
+            new Vector3(-1, -1, 0),
+            new Vector3( 3, -1, 0),
+            new Vector3(-1,  3, 0),
+        };
+
+        m.uv = new Vector2[]
+        {
+            new Vector2(0, 0),
+            new Vector2(2, 0),
+            new Vector2(0, 2),
+        };
+
+        // Winds from the last vertex to the first because for some reason that faces it towards negative z
+        m.triangles = new int[] { 2, 1, 0 };
+        m.RecalculateBounds();
+
+        // Now create the projector which will be returned
+        var obj = new GameObject("Projector Screen");
+        var mf = obj.AddComponent<MeshFilter>();
+        var mr = obj.AddComponent<MeshRenderer>();
+
+        mr.receiveShadows = false;
+        mr.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+        mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        mr.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+        mr.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
+
+        mf.sharedMesh = m;
+
+        return obj;
     }
 
     private bool LoadAssetBundle() {
@@ -99,17 +139,15 @@ public class WideAnglePlugin : BaseUnityPlugin
             return false;
         }
 
-        projector = bundle.LoadAsset<GameObject>("Projector");
         wideAngleCamera = bundle.LoadAsset<GameObject>("Wide Angle Camera");
         foreach (var shader in bundle.LoadAllAssets<Shader>()) {
             if (shader.name == $"Custom/{projection.Value.ToString()}")
                 wideAngleShader = shader;
         }
-        if (projector == null || wideAngleCamera == null || wideAngleShader == null) {
+        if (wideAngleCamera == null || wideAngleShader == null) {
             Logger.LogError("Wide angle views are NOT possible, please reacquire the asset bundle from https://github.com/BarackOBusiness/WKWideAngleCamera");
         }
 
-        DontDestroyOnLoad(projector);
         DontDestroyOnLoad(wideAngleCamera);
         DontDestroyOnLoad(wideAngleShader);
 
