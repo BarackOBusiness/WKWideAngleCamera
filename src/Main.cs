@@ -2,7 +2,6 @@
 using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
-using HarmonyLib;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -11,84 +10,94 @@ namespace WideAngleCamera;
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 public class WideAnglePlugin : BaseUnityPlugin
 {
-    private ConfigEntry<int> resolution;
-    private ConfigEntry<bool> useBackCam;
+    private ConfigEntry<Quality> quality;
+    private ConfigEntry<bool> renderBackface;
+    private ConfigEntry<Projection> projection;
 
-    private Material stereoMat;
     private GameObject projector;
-    private GameObject stereoCam;
+    private GameObject wideAngleCamera;
+    private Shader wideAngleShader;
+
+    enum Quality {
+        VeryLow = 256,
+        Low = 512,
+        Normal = 1024,
+        Extreme = 2048
+    }
+
+    enum Projection {
+        Stereographic,
+        Panini
+    }
 
     private void Awake() {
-        resolution = Config.Bind(
-            "General", "Resolution", 512,
-            "The default side length of a face on the cubemap."
+        quality = Config.Bind(
+            "General", "Cubemap Resolution", Quality.Low,
+            "The default side length of a face on the cubemap. This setting controls quality and performance."
         );
-        useBackCam = Config.Bind(
+
+        renderBackface = Config.Bind(
             "General", "Enable backface", false,
-            "Whether to render behind the player or not, this option incurs additional performance cost and is only useful if using extreme fields of view at which distortion makes gameplay impractical."
+            "Whether to render behind the player or not. Incurs additional performance cost and is only useful for extreme fields of view which make gameplay impractical."
         );
 
-        if (LoadBundleAssets()) {
-            SceneManager.sceneLoaded += OnSceneLoad;
-            Harmony harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
-            harmony.PatchAll(typeof(UT_CameraTakeoverPatches));
-            Logger.LogInfo("Wide angle views are now possible.");
-        }
+        projection = Config.Bind(
+            "Projection Configuration", "Projection Technique", Projection.Stereographic,
+            "The technique used to project the environment onto your screen. Stereographic projects from a sphere onto your view. Panini projects from a cylinder onto your view."
+        );
+
+        if (LoadAssetBundle()) {
+            SceneManager.sceneLoaded += OnSceneLoaded;
+            Logger.LogInfo("Wide angle views are NOW possible");
+        } // Abort the rest of setup if the asset bundle could not successfully load
     }
 
-    private void OnSceneLoad(Scene scene, LoadSceneMode mode) {
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode) {
+        Logger.LogDebug($"[{Time.time}]:[{scene.name}]");
         if (scene.name != "Intro" && scene.name != "Main-Menu") {
-            SetupScene();
-        }
-        // Disgusting vile behemoth just to expand the slider range, don't even worry about it
-        if (scene.name == "Main-Menu") {
-            GameObject slider = GameObject.Find("Canvas - Screens/Screens/Canvas - Screen - Settings/Settings Menu/SettingsParent/Settings Pane/Video Settings/Options Tab/Video/SliderAsset - FOV/Slider");
-            slider.GetComponent<DarkMachine.UI.SubmitSlider>().maxValue = 270f;
-        } else if (scene.name != "Intro") {
-            Transform pause = GameObject.Find("Pause").transform;
-            var slider = pause.GetChild(0).GetChild(3).GetChild(0).GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(7).GetChild(1);
-            slider.GetComponent<DarkMachine.UI.SubmitSlider>().maxValue = 270f;
+            Transform camParent = Camera.main.transform;
+            // Setup screen
+            GameObject screen = GameObject.Instantiate(projector, camParent, false);
+            // Let's start with a simple debug shader, the basic texture
+            screen.GetComponent<MeshRenderer>().material = new Material(wideAngleShader);
+            screen.transform.localScale = new Vector3(Camera.main.aspect, 1.0f, 1.0f);
+            screen.transform.localRotation = Quaternion.Euler(0f, 0f, 180.0f);
+            screen.transform.localPosition = new Vector3(0f, 0f, 1.0f);
+            screen.name = "Projector Screen";
+            screen.layer = 31;
+            // Setup camera
+            GameObject cam = GameObject.Instantiate(wideAngleCamera, camParent, false);
+            cam.name = "Wide Angle Camera";
+            CameraManager cMan = cam.AddComponent<CameraManager>();
+            cMan.Init(screen.GetComponent<MeshRenderer>(), renderBackface.Value, (int)quality.Value);
+            // Now finishing touches
+            Camera.main.cullingMask = 1 << 31;
+            Camera.main.orthographic = true;
+            Camera.main.orthographicSize = 0.5f;
         }
     }
 
-    private void SetupScene() {
-        Transform camParent = Camera.main.transform;
-        GameObject camManager = Instantiate(stereoCam, camParent);
-        GameObject projectorScreen = Instantiate(projector, camParent);
-        projectorScreen.layer = 31;
-        projectorScreen.transform.localPosition = new Vector3(0f, 0f, 0.5f);
-        projectorScreen.transform.localRotation = Quaternion.Euler(0f, 0f, 180f);
-        projectorScreen.transform.localScale = new Vector3(Camera.main.aspect, 1f, 1f);
-        camManager.AddComponent<StereographicCameraManager>().Init(
-            projectorScreen.GetComponent<MeshRenderer>(), useBackCam.Value, resolution.Value
-        );
-        Camera.main.orthographic = true;
-        Camera.main.orthographicSize = 0.5f;
-        Camera.main.cullingMask = 1 << 31;
-    }
-
-    private bool LoadBundleAssets() {
-        var dllDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        var path = Path.Combine(dllDir, "stereoassets");
-        var bundle = AssetBundle.LoadFromFile(path);
-
+    private bool LoadAssetBundle() {
+        string dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        var bundle = AssetBundle.LoadFromFile($"{dir}\\WideAngleAssets");
         if (bundle == null) {
-            Logger.LogError("Wide angle views are NOT possible, please check if the asset bundle is in the same directory as the plugin.");
+            Logger.LogError("Wide angle views are NOT possible, please ensure the asset bundle is present in the same folder as the plugin");
             return false;
         }
 
-        stereoMat = bundle.LoadAsset<Material>("Screen");
         projector = bundle.LoadAsset<GameObject>("Projector");
-        stereoCam = bundle.LoadAsset<GameObject>("Stereographic Camera");
-
-        if (stereoMat == null || projector == null || stereoCam == null) {
-            Logger.LogError("Wide angle views are NOT possible, please check the checksum of the asset bundle in the plugin directory, if it does not match X, reacquire this bundle");
-            return false;
+        wideAngleCamera = bundle.LoadAsset<GameObject>("Wide Angle Camera");
+        foreach (var shader in bundle.LoadAllAssets<Shader>()) {
+            if (shader.name == $"Custom/{projection.Value.ToString()}")
+                wideAngleShader = shader;
+        }
+        if (projector == null || wideAngleCamera == null || wideAngleShader == null) {
+            Logger.LogError("Wide angle views are NOT possible, please reacquire the asset bundle from https://github.com/BarackOBusiness/WKWideAngleCamera");
         }
 
-        DontDestroyOnLoad(stereoMat);
         DontDestroyOnLoad(projector);
-        DontDestroyOnLoad(stereoCam);
+        DontDestroyOnLoad(wideAngleCamera);
+        DontDestroyOnLoad(wideAngleShader);
 
         return true;
     }

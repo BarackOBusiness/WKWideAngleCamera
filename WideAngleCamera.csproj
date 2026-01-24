@@ -7,7 +7,7 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>wk.barackobusiness.wideangle</AssemblyName>
     <Product>Wide Angle Camera</Product>
-    <Version>1.1.1</Version>
+    <Version>2.0.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <RestoreAdditionalProjectSources>
@@ -24,7 +24,7 @@
   </PropertyGroup>
   <Target Name="CopyDebugAssets" AfterTargets="Build" Condition="'$(Configuration)'=='Debug'">
     <ItemGroup>
-      <PluginAssets Include="assets/stereoassets" />
+      <PluginAssets Include="assets/WideAngleAssets" />
     </ItemGroup>
     <Copy SourceFiles="@(PluginAssets)" DestinationFolder="$(OutDir)" />
   </Target>
@@ -38,7 +38,7 @@
   </PropertyGroup>
   <Target Name="ReleaseOutput" AfterTargets="Build" Condition="'$(Configuration)'=='Release'">
     <ItemGroup>
-      <PluginAssets Include="assets/stereoassets" />
+      <PluginAssets Include="assets/WideAngleAssets" />
       <ThunderstoreAssets Include="assets/package/README.md;assets/package/icon.png;assets/package/manifest.json;assets/package/CHANGELOG.md" />
       <DepsJson Include="$(OutDir)*.deps.json" />
     </ItemGroup>
