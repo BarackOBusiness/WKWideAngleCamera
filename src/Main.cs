@@ -53,8 +53,17 @@ public class WideAnglePlugin : BaseUnityPlugin
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode) {
-        Logger.LogDebug($"[{Time.time}]:[{scene.name}]");
-        if (scene.name != "Intro" && scene.name != "Main-Menu") {
+        if (scene.name == "Intro") return;
+        // These here disgusting behemoths set the fov slider range
+        if (scene.name == "Main-Menu") {
+            GameObject slider = GameObject.Find("Canvas - Screens/Screens/Canvas - Screen - Settings/Settings Menu/SettingsParent/Settings Pane/Video Settings/Options Tab/Video/SliderAsset - FOV/Slider");
+            slider.GetComponent<DarkMachine.UI.SubmitSlider>().maxValue = 270f;
+        } else {
+            Transform pause = GameObject.Find("Pause").transform;
+            var slider = pause.GetChild(0).GetChild(3).GetChild(0).GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(7).GetChild(1);
+            slider.GetComponent<DarkMachine.UI.SubmitSlider>().maxValue = 270f;
+
+            // Setup the camera
             Transform camParent = Camera.main.transform;
             // Setup screen
             GameObject screen = GameObject.Instantiate(projector, camParent, false);

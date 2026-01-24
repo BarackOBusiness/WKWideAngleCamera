@@ -84,7 +84,13 @@ SubShader {
                 }
 
                 float h = p.x * h_edge;
-                float v = p.y * h_edge / aspect;
+                float v = p.y * h_edge;
+                // Field of view setting scales the greater axis of the display
+                if (aspect > 1.0) {
+                    v /= aspect;
+                } else {
+                    h /= aspect;
+                }
 
                 float2 c = MapToCylinder(h, v);
                 float3 dir = MapToSphere(c);

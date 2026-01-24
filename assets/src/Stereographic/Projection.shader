@@ -58,8 +58,13 @@ SubShader {
                 // for this projection
                 float fovRad = radians(_FOV);
                 float scale = tan(fovRad * 0.25);
-                p.x *= scale;
-                p.y *= scale / aspect;
+                // Field of view setting scales the greater axis of the display
+                if (aspect > 1.0) {
+                    p.y /= aspect;
+                } else {
+                    p.x /= aspect;
+                }
+                p *= scale;
 
                 float3 dir = MapToSphere(p);
                 return texCUBE(_MainTex, dir);

@@ -1,10 +1,11 @@
 using UnityEngine;
+using System.Reflection;
+using System.Collections;
 
 namespace WideAngleCamera;
 
 public class CameraManager : MonoBehaviour {
 	public static CameraManager Instance;
-	public static bool Ready = false;
 
 	private Camera front;
 	private Camera back;
@@ -14,11 +15,28 @@ public class CameraManager : MonoBehaviour {
 	private Camera down;
 
 	private RenderTexture cubemap;
-	public RenderTexture equirect;
-	private ENT_Player player;
+	private Material screen;
 
-	internal void Init(MeshRenderer screen, bool useBack, int size) {
+	// FOV animation parameters
+	private float curFOV;
+	private float sprintFOV;
+	private float smoothedFOV;
+
+	// Player state
+	private ENT_Player player;
+	private FieldInfo sliding;
+
+	internal void Init(MeshRenderer projector, bool useBack, int size) {
 		Instance = this;
+
+		// Set FOV parameters
+		curFOV = SettingsManager.settings.playerFOV;
+		sprintFOV = curFOV + 15f;
+		smoothedFOV = curFOV;
+
+		// Cache player fields that are private for future access
+		player = ENT_Player.GetPlayer();
+		sliding = typeof(ENT_Player).GetField("isSliding", BindingFlags.Instance | BindingFlags.NonPublic);
 
 		front = transform.GetChild(0).GetComponent<Camera>();
 		SetupCam(front, Camera.main, size);
@@ -40,18 +58,33 @@ public class CameraManager : MonoBehaviour {
 		cubemap = new RenderTexture(size, size, 16);
 		cubemap.dimension = UnityEngine.Rendering.TextureDimension.Cube;
 
-		screen.material.mainTexture = cubemap;
-		Ready = true;
+		screen = projector.material;
+		screen.mainTexture = cubemap;
+		screen.SetFloat("_FOV", curFOV);
 	}
 
 	private void Update() {
-		if (!Ready) return;
+		if (screen == null) return;
 		Graphics.CopyTexture(front.targetTexture, 0, cubemap, 4);
 		if (back != null) Graphics.CopyTexture(back.targetTexture, 0, cubemap, 5);
 		Graphics.CopyTexture(right.targetTexture, 0, cubemap, 0);
 		Graphics.CopyTexture(left.targetTexture, 0, cubemap, 1);
 		Graphics.CopyTexture(up.targetTexture, 0, cubemap, 3);
 		Graphics.CopyTexture(down.targetTexture, 0, cubemap, 2);
+
+		if (!player.IsLocked()) {
+			curFOV = Mathf.Clamp(curFOV + player.curBuffs.GetBuff("addFOV"), 60f, 315f);
+			smoothedFOV = Math.ExpDecay(smoothedFOV, curFOV, 5f, Time.deltaTime);
+			curFOV = SettingsManager.settings.playerFOV;
+			sprintFOV = curFOV + 15f; // This is the only mechanism I see through which this can update realtime
+			screen.SetFloat("_FOV", smoothedFOV);
+		}
+		if (!player.IsMoveLocked() && !CommandConsole.IsConsoleVisible()) {
+			var isSliding = (bool)sliding.GetValue(player);
+			if (player.IsSprinting() && player.IsGrounded() && !isSliding) {
+				curFOV = sprintFOV;
+			}
+		}
 	}
 
 	private void OnDestroy() {
