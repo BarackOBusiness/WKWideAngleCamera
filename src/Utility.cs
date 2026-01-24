@@ -13,11 +13,15 @@ public static class UT_CameraTakeoverPatches {
 	[HarmonyPatch(typeof(UT_CameraTakeover), "Start")]
 	[HarmonyPostfix]
 	public static void Postfix_Start(UT_CameraTakeover __instance) {
+		__instance.fov = 90.0f * Camera.main.aspect;
+	}
+
+	[HarmonyPatch(typeof(UT_CameraTakeover), "Update")]
+	[HarmonyPostfix]
+	public static void Postfix_Update(UT_CameraTakeover __instance, ref bool ___active) {
 		var wideCam = CameraManager.Instance;
-		// Don't need the smoothing on the deactivation event I think, the camera
-		// already tries to handle this and I think- counterintuitively- doing it
-		// here makes the transition less smooth even though it should neatly handle
-		// getting back to configured fov
-		// __instance.activateEvent.AddListener(() => { wideCam.StartCoroutine(wideCam.LerpFOV(120.0f)); });
+		if (___active) {
+			wideCam.SetFOV(Math.ExpDecay(wideCam.GetFOV(), __instance.fov, __instance.speed, Time.deltaTime));
+		}
 	}
 }

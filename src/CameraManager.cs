@@ -99,4 +99,12 @@ public class CameraManager : MonoBehaviour {
 		cam.cullingMask = orig.cullingMask;
 		cam.depthTextureMode = DepthTextureMode.Depth;
 	}
+
+	public float GetFOV() {
+		return screen.GetFloat("_FOV");
+	}
+
+	public void SetFOV(float fov) {
+		screen.SetFloat("_FOV", fov);
+	}
 }

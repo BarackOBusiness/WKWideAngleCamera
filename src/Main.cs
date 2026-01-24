@@ -2,6 +2,7 @@
 using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
+using HarmonyLib;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -17,6 +18,8 @@ public class WideAnglePlugin : BaseUnityPlugin
     private GameObject projector;
     private GameObject wideAngleCamera;
     private Shader wideAngleShader;
+
+    private Harmony patcher;
 
     enum Quality {
         VeryLow = 256,
@@ -48,6 +51,8 @@ public class WideAnglePlugin : BaseUnityPlugin
 
         if (LoadAssetBundle()) {
             SceneManager.sceneLoaded += OnSceneLoaded;
+            patcher = new Harmony(MyPluginInfo.PLUGIN_GUID);
+            patcher.PatchAll(typeof(UT_CameraTakeoverPatches));
             Logger.LogInfo("Wide angle views are NOW possible");
         } // Abort the rest of setup if the asset bundle could not successfully load
     }
