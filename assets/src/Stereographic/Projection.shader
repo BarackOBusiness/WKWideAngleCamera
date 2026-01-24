@@ -39,7 +39,8 @@ SubShader {
                 float3 dir;
                 dir.x = 2.0 * p.x / denom;
                 dir.y = 2.0 * p.y / denom;
-                dir.z = (r2 - 1.0) / denom;
+                // z axis is flipped relative to unity cubemap, so negate it
+                dir.z = -(r2 - 1.0) / denom;
                 return normalize(dir);
             }
             

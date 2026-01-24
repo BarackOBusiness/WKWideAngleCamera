@@ -4,6 +4,7 @@ v2.0.0
 - Added panini projection; a cylindrical mapping to the view plane
 - The resolution option was changed to presets, this was done to prevent breakages caused by setting the resolution to a non-power of two.
 - Fixed critical issue where the view plane was larger than the camera bounds, why is the player scaled to 1.5. why.
+- Fixed black flashing issue that occurred as a result of fixing the above issue
 - Fixed shader calculations so that the fov option now properly sets horizontal field of view
 
 v1.1.1
