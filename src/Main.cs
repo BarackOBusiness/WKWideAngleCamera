@@ -87,7 +87,7 @@ public class WideAnglePlugin : BaseUnityPlugin
             // Now finishing touches
             Camera.main.cullingMask = 1 << 31;
             Camera.main.orthographic = true;
-            Camera.main.orthographicSize = 0.5f;
+            Camera.main.orthographicSize = 0.75f;
         }
     }
 
