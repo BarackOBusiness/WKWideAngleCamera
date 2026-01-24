@@ -60,7 +60,7 @@ public class CameraManager : MonoBehaviour {
 
 		screen = projector.material;
 		screen.mainTexture = cubemap;
-		screen.SetFloat("_FOV", curFOV);
+		SetFOV(curFOV);
 	}
 
 	private void Update() {
@@ -77,7 +77,7 @@ public class CameraManager : MonoBehaviour {
 			smoothedFOV = Math.ExpDecay(smoothedFOV, curFOV, 5f, Time.deltaTime);
 			curFOV = SettingsManager.settings.playerFOV;
 			sprintFOV = curFOV + 15f; // This is the only mechanism I see through which this can update realtime
-			screen.SetFloat("_FOV", smoothedFOV);
+			SetFOV(smoothedFOV);
 		}
 		if (!player.IsMoveLocked() && !CommandConsole.IsConsoleVisible()) {
 			var isSliding = (bool)sliding.GetValue(player);

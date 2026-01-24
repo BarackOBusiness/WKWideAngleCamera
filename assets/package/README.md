@@ -1,13 +1,24 @@
 # White Knuckle Wide Angle Camera Mod
-A mod that implements stereographic projection to allow for much greater fields of view with minimal/more pleasant distortion.
-![](https://github.com/BarackOBusiness/WKWideAngleCamera/blob/master/assets/gallery/preview.avif?raw=true "Example of 180° camera in motion climbing the interlude to pipeworks")
+Adds novel projection techniques to White Knuckle to allow for much greater fields of view with more pleasant distortion profiles.
+![](https://github.com/barackobusiness/wkwideanglecamera/blob/master/assets/gallery/preview.avif?raw=true)
 
-Specifics
----
-The mod currently features the wide angle camera in question fully functionally. The FOV may be adjusted by the now expanded slider in the settings menu as usual. The FOV scales with sprint and consumable effects, and zooms to computer terminals appropriately.
+## Features
+- Very wide FOV (in horizontal degrees), via two distinct camera projections, see below
+- Configurable cubemap resolution, which generally scales the performance to clarity ratio of the camera (higher resolution increases sharpness but is more costly)
+- Ability to render behind the player, which typically only needs to be enabled if your ocular venture takes you to such heights of view where gameplay is a secondary concern
 
-It supports configuration in the BepInEx configuration file via the following parameters:
-* Resolution of the cubemap, which generally scales the clarity to performance ratio of the camera (higher resolution is sharper, but more costly)
-* Whether to render behind the player, which only needs to be enabled if your fov is so high that you can see behind you
+## Gallery
+![](https://github.com/barackobusiness/wkwideanglecamera/blob/master/assets/gallery/stereographic-250fov.avif?raw=true)
+*Walking along the haunted pier and climbing some buildings under stereographic projection at 250° hfov*
 
-As of right now there is one known issue where hand grab sprites diverge from their actual position at very high FOV
+![](https://github.com/barackobusiness/wkwideanglecamera/blob/master/assets/gallery/panini-250fov.avif?raw=true)
+*Entering habitation yellow using panini projection at 250° hfov*
+
+![](https://github.com/barackobusiness/wkwideanglecamera/blob/master/assets/gallery/default-250fov.avif?raw=true)
+*Unpleasant distortion visible at the same field of view in the default (perspective/rectilinear) camera projection*
+
+## Further Information
+The default perspective projection of most games applies field of view by taking the vertical field of view as a parameter.
+Therefore, to compare fairly between the two, you should multiply your perspective fov by your display's aspect ratio.\
+For example: 90° × 16:9 == 90° × (16/9) = 160° which becomes the angle from edge to edge horizontally of your screen.\
+Above 140° you should find that stereographic and panini projections map the environment to your periphery with much less distortion.
