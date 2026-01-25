@@ -1,7 +1,7 @@
 {
   "name": "Wide_Angle_Camera",
   "description": "Allows for very high fields of view by implementing novel projections.",
-  "version_number": "2.0.0",
+  "version_number": "2.0.1",
   "dependencies": [
     "BepInEx-BepInExPack-5.4.2304"
   ],

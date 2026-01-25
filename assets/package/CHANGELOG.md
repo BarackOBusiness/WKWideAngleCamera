@@ -1,4 +1,8 @@
 # Changelog
+v2.0.1
+---
+- Updated incorrect information and comparisons in the README
+
 v2.0.0
 ---
 - Added panini projection; a cylindrical mapping to the view plane
