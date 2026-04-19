@@ -1,6 +1,6 @@
 # White Knuckle Wide Angle Camera Mod
 Adds novel projection techniques to White Knuckle to allow for much greater fields of view with more pleasant distortion profiles.
-![](https://github.com/barackobusiness/wkwideanglecamera/blob/master/assets/gallery/preview.avif?raw=true)
+![](https://github.com/barackobusiness/wkwideanglecamera/blob/master/assets/gallery/preview.avif?raw=true)\
 *Note, the black flickering present in the bottom left corner of these and other showcase clips are not present in the release build of the mod, this video was taken earlier in development*
 
 ## Features

@@ -1,4 +1,9 @@
 # Changelog
+v2.0.2
+---
+- Compatibility with anniversary update
+- Parity with vanilla console field of view (no longer naively multiplies by aspect ratio)
+
 v2.0.1
 ---
 - Updated incorrect information and comparisons in the README
