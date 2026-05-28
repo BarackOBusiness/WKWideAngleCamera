@@ -24,18 +24,22 @@ public class CameraManager : MonoBehaviour {
 
 	// Player state
 	private ENT_Player player;
+	private SettingsManager.GameSettings settings;
 	private FieldInfo sliding;
 
 	internal void Init(MeshRenderer projector, bool useBack, int size) {
 		Instance = this;
 
+		// Cache common data for less verbosity
+		player = ENT_Player.GetPlayer();
+		settings = SettingsManager.settings;
+
 		// Set FOV parameters
-		curFOV = SettingsManager.settings.playerFOV;
+		curFOV = settings.playerFOV;
 		sprintFOV = curFOV + 15f;
 		smoothedFOV = curFOV;
 
-		// Cache player fields that are private for future access
-		player = ENT_Player.GetPlayer();
+		// isSliding is private, so cache the field info to access with reflection
 		sliding = typeof(ENT_Player).GetField("isSliding", BindingFlags.Instance | BindingFlags.NonPublic);
 
 		front = transform.GetChild(0).GetComponent<Camera>();
@@ -75,13 +79,13 @@ public class CameraManager : MonoBehaviour {
 		if (!player.IsLocked()) {
 			curFOV = Mathf.Clamp(curFOV + player.curBuffs.GetBuff("addFOV"), 60f, 315f);
 			smoothedFOV = Math.ExpDecay(smoothedFOV, curFOV, 5f, Time.deltaTime);
-			curFOV = SettingsManager.settings.playerFOV;
+			curFOV = settings.playerFOV;
 			sprintFOV = curFOV + 15f; // This is the only mechanism I see through which this can update realtime
 			SetFOV(smoothedFOV);
 		}
 		if (!player.IsMoveLocked() && !CommandConsole.IsConsoleVisible()) {
 			var isSliding = (bool)sliding.GetValue(player);
-			if (player.IsSprinting() && player.IsGrounded() && !isSliding) {
+			if (player.IsSprinting() && player.IsGrounded() && !isSliding && !settings.disableSprintFov) {
 				curFOV = sprintFOV;
 			}
 		}
