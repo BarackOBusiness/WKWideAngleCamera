@@ -1,4 +1,8 @@
 # Changelog
+v2.0.3
+---
+- Now respects "Disable sprint FOV change" option
+
 v2.0.2
 ---
 - Compatibility with anniversary update
