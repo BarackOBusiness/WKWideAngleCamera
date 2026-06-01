@@ -27,7 +27,7 @@ public class CameraManager : MonoBehaviour {
 	private SettingsManager.GameSettings settings;
 	private FieldInfo sliding;
 
-	internal void Init(MeshRenderer projector, bool useBack, int size) {
+	internal void Init(MeshRenderer projector, Camera orig, bool useBack, int size) {
 		Instance = this;
 
 		// Cache common data for less verbosity
@@ -43,20 +43,20 @@ public class CameraManager : MonoBehaviour {
 		sliding = typeof(ENT_Player).GetField("isSliding", BindingFlags.Instance | BindingFlags.NonPublic);
 
 		front = transform.GetChild(0).GetComponent<Camera>();
-		SetupCam(front, Camera.main, size);
+		SetupCam(front, orig, size);
 		left = transform.GetChild(1).GetComponent<Camera>();
-		SetupCam(left, Camera.main, size);
+		SetupCam(left, orig, size);
 		right = transform.GetChild(2).GetComponent<Camera>();
-		SetupCam(right, Camera.main, size);
+		SetupCam(right, orig, size);
 		down = transform.GetChild(3).GetComponent<Camera>();
-		SetupCam(down, Camera.main, size);
+		SetupCam(down, orig, size);
 		up = transform.GetChild(4).GetComponent<Camera>();
-		SetupCam(up, Camera.main, size);
+		SetupCam(up, orig, size);
 		if (useBack) {
 			var backObj = transform.GetChild(5).gameObject;
 			backObj.SetActive(true);
 			back = backObj.GetComponent<Camera>();
-			SetupCam(back, Camera.main, size);
+			SetupCam(back, orig, size);
 		}
 
 		cubemap = new RenderTexture(size, size, 16);

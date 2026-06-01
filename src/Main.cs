@@ -79,7 +79,7 @@ public class WideAnglePlugin : BaseUnityPlugin
             GameObject cam = GameObject.Instantiate(wideAngleCamera, camParent, false);
             cam.name = "Wide Angle Camera";
             CameraManager cMan = cam.AddComponent<CameraManager>();
-            cMan.Init(screen.GetComponent<MeshRenderer>(), renderBackface.Value, (int)quality.Value);
+            cMan.Init(screen.GetComponent<MeshRenderer>(), Camera.main, renderBackface.Value, (int)quality.Value);
             // Now finishing touches
             Camera.main.nearClipPlane = 0.0f;
             Camera.main.farClipPlane = 1.0f;
@@ -88,6 +88,19 @@ public class WideAnglePlugin : BaseUnityPlugin
             Camera.main.orthographicSize = 0.75f;
             Camera.main.useOcclusionCulling = false;
             Camera.main.clearFlags = CameraClearFlags.Nothing; // This fixes the ZWrite problem
+            // Inventory camera, this is easily the most wasteful thing I think I've ever attempted
+            // but since the inventory will mostly be transparency I hope it's not that big an impact
+            // Start by setting up the screen, maybe we'll just have it overlay the main projection?
+            GameObject invScreen = SetupProjector();
+            invScreen.GetComponent<MeshRenderer>().material = new Material(wideAngleShader);
+            invScreen.transform.localPosition = new Vector3(0f, 0f, 0.25f);
+            invScreen.transform.SetParent(camParent, false);
+            invScreen.layer = 31;
+            Camera invCam = camParent.Find("Inventory Camera").GetComponent<Camera>();
+            GameObject invWCam = GameObject.Instantiate(wideAngleCamera, camParent, false);
+            invWCam.name = "Wide Angle Inventory Camera";
+            CameraManager icMan = invWCam.AddComponent<CameraManager>();
+            icMan.Init(invScreen.GetComponent<MeshRenderer>(), invCam, renderBackface.Value, (int)quality.Value);
         }
     }
 
