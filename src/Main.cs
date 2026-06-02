@@ -79,7 +79,8 @@ public class WideAnglePlugin : BaseUnityPlugin
             GameObject cam = GameObject.Instantiate(wideAngleCamera, camParent, false);
             cam.name = "Wide Angle Camera";
             CameraManager cMan = cam.AddComponent<CameraManager>();
-            cMan.Init(screen.GetComponent<MeshRenderer>(), Camera.main, renderBackface.Value, (int)quality.Value);
+            cMan.Init(screen.GetComponent<MeshRenderer>().material, Camera.main, renderBackface.Value, (int)quality.Value);
+            CameraManager.Instance = cMan;
             // Now finishing touches
             Camera.main.nearClipPlane = 0.0f;
             Camera.main.farClipPlane = 1.0f;
@@ -87,20 +88,31 @@ public class WideAnglePlugin : BaseUnityPlugin
             Camera.main.orthographic = true;
             Camera.main.orthographicSize = 0.75f;
             Camera.main.useOcclusionCulling = false;
-            Camera.main.clearFlags = CameraClearFlags.Nothing; // This fixes the ZWrite problem
+            // Camera.main.clearFlags = CameraClearFlags.Nothing; // This fixes the ZWrite problem
+
             // Inventory camera, this is easily the most wasteful thing I think I've ever attempted
             // but since the inventory will mostly be transparency I hope it's not that big an impact
             // Start by setting up the screen, maybe we'll just have it overlay the main projection?
-            GameObject invScreen = SetupProjector();
-            invScreen.GetComponent<MeshRenderer>().material = new Material(wideAngleShader);
-            invScreen.transform.localPosition = new Vector3(0f, 0f, 0.25f);
-            invScreen.transform.SetParent(camParent, false);
-            invScreen.layer = 31;
+            GameObject handScreen = SetupProjector();
+            handScreen.GetComponent<MeshRenderer>().material = new Material(wideAngleShader);
+            handScreen.transform.localPosition = new Vector3(0f, 0f, 0.25f);
+            handScreen.transform.SetParent(camParent, false);
+            handScreen.layer = 31;
             Camera invCam = camParent.Find("Inventory Camera").GetComponent<Camera>();
-            GameObject invWCam = GameObject.Instantiate(wideAngleCamera, camParent, false);
-            invWCam.name = "Wide Angle Inventory Camera";
-            CameraManager icMan = invWCam.AddComponent<CameraManager>();
-            icMan.Init(invScreen.GetComponent<MeshRenderer>(), invCam, renderBackface.Value, (int)quality.Value);
+            GameObject handCam = GameObject.Instantiate(wideAngleCamera, camParent, false);
+            handCam.name = "Wide Angle Hand Camera";
+            // The legendary hand man, he's here...
+            CameraManager handMan = handCam.AddComponent<CameraManager>();
+            handMan.Init(handScreen.GetComponent<MeshRenderer>().material, invCam, renderBackface.Value, (int)quality.Value);
+            CameraManager.HandInstance = handMan;
+            var handMen = handMan.GetSubCameras();
+            // This joke has gone way too far but I don't really care enough to make the values actually descript
+            foreach (var man in handMen) {
+                man.clearFlags = CameraClearFlags.SolidColor;
+                man.cullingMask = 1 << 28;
+            }
+            // Finally make it so that hands show up on the correct layer
+            handCam.AddComponent<HelpingHand>();
         }
     }
 
