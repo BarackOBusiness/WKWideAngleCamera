@@ -12,8 +12,9 @@ namespace WideAngleCamera;
 public class WideAnglePlugin : BaseUnityPlugin
 {
     private ConfigEntry<Quality> quality;
-    private ConfigEntry<bool> renderBackface;
     private ConfigEntry<Projection> projection;
+    private ConfigEntry<bool> syncHands;
+    private ConfigEntry<bool> renderBackface;
 
     private GameObject wideAngleCamera;
     private Shader wideAngleShader;
@@ -38,14 +39,22 @@ public class WideAnglePlugin : BaseUnityPlugin
             "The default side length of a face on the cubemap. This setting controls quality and performance."
         );
 
-        renderBackface = Config.Bind(
-            "General", "Enable backface", false,
-            "Whether to render behind the player or not. Incurs additional performance cost and is only useful for extreme fields of view which make gameplay impractical."
-        );
-
         projection = Config.Bind(
             "Projection Configuration", "Projection Technique", Projection.Stereographic,
             "The technique used to project the environment onto your screen. Stereographic projects from a sphere onto your view. Panini projects from a cylinder onto your view."
+        );
+
+        syncHands = Config.Bind(
+            "General", "Synchronize Hands", true,
+            """
+            Whether to synchronize hands or not. When synchronized, a second wide angle projection camera is created with the sole purpose to render hands in the world, which incurs a not insignificant rendering cost.
+            However hand sprites will be rendered appropriately in the position where you have grabbed and should not diverge from there.
+            """
+        );
+
+        renderBackface = Config.Bind(
+            "General", "Enable backface", false,
+            "Whether to render behind the player or not. Incurs additional performance cost but resolves black borders on the edges of the screen at high fields of view. Perhaps necessary for normal fovs on ultrawide screens."
         );
 
         if (LoadAssetBundle()) {
@@ -90,6 +99,7 @@ public class WideAnglePlugin : BaseUnityPlugin
             Camera.main.useOcclusionCulling = false;
             // Camera.main.clearFlags = CameraClearFlags.Nothing; // This fixes the ZWrite problem
 
+            if (!syncHands.Value) return;
             // Inventory camera, this is easily the most wasteful thing I think I've ever attempted
             // but since the inventory will mostly be transparency I hope it's not that big an impact
             // Start by setting up the screen, maybe we'll just have it overlay the main projection?

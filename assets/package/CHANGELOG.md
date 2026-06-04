@@ -1,4 +1,7 @@
 # Changelog
+v3.0.0
+---
+- Added option to synchronize hand rendering to where they are in the world (on by default) but has some performance penalty.
 v2.0.3
 ---
 - Now respects "Disable sprint FOV change" option
