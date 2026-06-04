@@ -2,6 +2,8 @@
 v3.0.0
 ---
 - Added option to synchronize hand rendering to where they are in the world (on by default) but has some performance penalty.
+- Added azimuthal equidistant and equisolid angle projections.
+
 v2.0.3
 ---
 - Now respects "Disable sprint FOV change" option

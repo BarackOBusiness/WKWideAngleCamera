@@ -4,6 +4,7 @@ using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 
 namespace WideAngleCamera;
@@ -90,6 +91,7 @@ public class WideAnglePlugin : BaseUnityPlugin
             // Setup screen
             GameObject screen = SetupProjector();
             screen.GetComponent<MeshRenderer>().material = new Material(wideAngleShader);
+            screen.GetComponent<MeshRenderer>().material.renderQueue = (int)RenderQueue.Geometry;
             screen.transform.localPosition = new Vector3(0f, 0f, 0.5f);
             screen.transform.SetParent(camParent, false);
             screen.layer = 31;
@@ -106,7 +108,7 @@ public class WideAnglePlugin : BaseUnityPlugin
             Camera.main.orthographic = true;
             Camera.main.orthographicSize = 0.75f;
             Camera.main.useOcclusionCulling = false;
-            // Camera.main.clearFlags = CameraClearFlags.Nothing; // This fixes the ZWrite problem
+            Camera.main.clearFlags = CameraClearFlags.SolidColor;
 
             if (!syncHands.Value) return;
             // Inventory camera, this is easily the most wasteful thing I think I've ever attempted
