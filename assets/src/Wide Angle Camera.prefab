@@ -182,7 +182,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &2501227717024616939
 Transform:
   m_ObjectHideFlags: 0
@@ -528,10 +528,10 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4093144086526944660}
+  - {fileID: 2501227717024616939}
   - {fileID: 5648512326115868200}
   - {fileID: 8253575772029277048}
   - {fileID: 6429806586123229234}
   - {fileID: 681025333271273934}
-  - {fileID: 2501227717024616939}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

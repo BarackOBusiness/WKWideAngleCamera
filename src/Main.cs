@@ -30,6 +30,8 @@ public class WideAnglePlugin : BaseUnityPlugin
 
     enum Projection {
         Stereographic,
+        Equidistant,
+        Equisolid,
         Panini
     }
 
@@ -41,7 +43,14 @@ public class WideAnglePlugin : BaseUnityPlugin
 
         projection = Config.Bind(
             "Projection Configuration", "Projection Technique", Projection.Stereographic,
-            "The technique used to project the environment onto your screen. Stereographic projects from a sphere onto your view. Panini projects from a cylinder onto your view."
+            """
+            The technique used to project the environment onto your screen.
+            Stereographic projection draws a ray through each point on the sphere onto the projected plane. Just like standard rectilinear, only the projection point is at the north pole instead of the origin of the sphere.
+            It is conformal, as in locally angles of intersections are preserved; circles remain circular at any given position on screen. This is the recommended and likely most comfortable projection to play with.
+            Equidistant projection maps points on the viewing sphere to the projected plane such that distance from the center corresponds directly to angle measure between that point and the center on the globe.
+            Equisolid projection maps the viewing sphere to a disk such that area on the disk accurately represents area at all regions of the sphere.
+            Panini projects from a cylinder onto your view. The straightness of vertical lines is retained from rectilinear projection while allowing for a much wider field of view.
+            """
         );
 
         syncHands = Config.Bind(

@@ -6,12 +6,13 @@ Properties {
 }
 
 SubShader {
-    Tags { "RenderType" = "Opaque" }
+    Tags { "RenderType" = "Transparent" "Queue" = "Transparent" }
     Cull Off
     ZTest Always
     ZWrite Off
     Lighting Off
     Fog { Mode Off }
+    Blend SrcAlpha OneMinusSrcAlpha
 
     Pass {
         CGPROGRAM
@@ -35,7 +36,7 @@ SubShader {
             float _D; // The distance constant
 
             // Takes pre-scaled point and maps it to azimuth and altitude
-            float2 MapToCylinder (float h, float v)
+            float2 MapToCylinder(float h, float v)
             {
                 // Map distance constant and point parameter to shorter names
                 float d = _D;
@@ -56,7 +57,7 @@ SubShader {
             }
 
             // Maps the cylindrical coordinate to a direction on the unit-sphere
-            float3 MapToSphere (float2 c)
+            float3 MapToSphere(float2 c)
             {
                 float3 dir;
                 dir.x = cos(c.y)*sin(c.x);
@@ -90,11 +91,11 @@ SubShader {
 
                 float h = p.x * h_edge;
                 float v = p.y * h_edge;
-                if (aspect > 1.0) {
-                    v /= aspect;
-                } else {
-                    h /= aspect;
-                }
+
+                // Branchless form of scaling the minor axis down by the aspect ratio
+                bool widescreen = aspect > 1.0;
+                v /= widescreen * aspect + !(widescreen);
+                h /= !widescreen * aspect + widescreen;
 
                 float2 c = MapToCylinder(h, v);
                 float3 dir = MapToSphere(c);
