@@ -1,45 +1,60 @@
 # Changelog
-v3.0.0
----
-- Added option to synchronize hand rendering to where they are in the world (on by default) but has some performance penalty.
-- Added azimuthal equidistant and equisolid angle projections.
 
-v2.0.3
----
-- Now respects "Disable sprint FOV change" option
+## v3.0.0
 
-v2.0.2
----
+### Additions
+- Relatively expensive option to synchronize hand rendering to where they are in the world (on by default)
+- Azimuthal equidistant and equisolid angle projections
+
+## v2.0.3 - 2026-05-28
+
+### Fixes
+- Mod respects "Disable sprint FOV change" option
+
+## v2.0.2 - 2026-04-19
+
+### Fixes
 - Compatibility with anniversary update
-- Parity with vanilla console field of view (no longer naively multiplies by aspect ratio)
+- Parity with vanilla terminal FOV (no longer naively multiplies by aspect ratio)
 
-v2.0.1
----
-- Updated incorrect information and comparisons in the README
+## v2.0.1 - 2026-01-25
 
-v2.0.0
----
-- Added panini projection; a cylindrical mapping to the view plane
-- The resolution option was changed to presets, this was done to prevent breakages caused by setting the resolution to a non-power of two.
-- Fixed critical issue where the view plane was larger than the camera bounds, why is the player scaled to 1.5. why.
-- Fixed black flashing issue that occurred as a result of fixing the above issue
-- Fixed shader calculations so that the fov option now properly sets horizontal field of view
+### Fixes
+- Corrected information in the README
+- Added correct comparison to the README
 
-v1.1.1
----
-- Matched camera field of view change speed to vanilla game
-- Fixed upgrade terminal animation smoothing
+## v2.0.0 - 2026-01-24
 
-v1.1.0
----
-- Camera now respects settings menu field of view slider, removed fov config option
-- Field of view now responds to sprinting
-- Field of view now responds to consumable effects
-- Field of view zooms to fit upgrade terminals
+### Additions
+- Panini projection; a cylindrical kind of view projection
 
-v1.0.0
----
-- Implemented the stereographic camera projection
+### Changes
+- Cubemap resolution now offers presets instead of taking an integer, this was done to prevent breakage caused by setting the resolution to a non-power of two
+- FOV option now sets the field of view of the major axis of your display, instead of always the vertical axis
+
+### Fixes
+- View plane now matches the camera bounds, as a result the visible range now expectedly matches the set FOV
+- Fixed flickering triangle that happened in the old quad setup
+
+## v1.1.1 - 2026-01-23
+
+### Fixes
+- Camera field of view change speed matches vanilla
+- Terminal zoom animation matches vanilla speed
+
+## v1.1.0 - 2026-01-22
+
+### Changes
+- Camera respects field of view slider in settings menu instead of BepInEx configuration
+
+### Fixes
+- Field of view responds to sprinting and consumable effects
+- Field of view scales to fit terminals
+
+## v1.0.0 - 2026-01-21
+
+### Additions
+- Stereographic projection
 - Configurable cubemap resolution, defaults to 512px
 - Configurable vertical field of view, defaults to 135
-- Configurable backface rendering, defaults off
+- Toggleable backface rendering, defaults off
