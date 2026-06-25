@@ -1,6 +1,18 @@
 # Changelog
 
-## v3.0.0
+## v3.1.0 - 2026-06-25
+
+### Fixes
+- Compatibility with The Nest update
+
+### Changes
+- Field of view slider now controls the vertical field of view instead of the horizontal
+- Field of view slider is now bounded at a reasonable default maximum for your selected projection
+
+### Additions
+- Reasonable field of view slider bounding may be turned off in the config, allowing for very cool screenshots and impractical gameplay
+
+## v3.0.0 - 2026-06-04
 
 ### Additions
 - Relatively expensive option to synchronize hand rendering to where they are in the world (on by default)
