@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
@@ -16,6 +17,7 @@ public class WideAnglePlugin : BaseUnityPlugin
     private ConfigEntry<Projection> projection;
     private ConfigEntry<bool> syncHands;
     private ConfigEntry<bool> renderBackface;
+    private ConfigEntry<bool> allowExtreme;
 
     private GameObject wideAngleCamera;
     private Shader wideAngleShader;
@@ -29,7 +31,7 @@ public class WideAnglePlugin : BaseUnityPlugin
         Extreme = 2048
     }
 
-    enum Projection {
+    public enum Projection {
         Stereographic,
         Equidistant,
         Equisolid,
@@ -67,6 +69,11 @@ public class WideAnglePlugin : BaseUnityPlugin
             "Whether to render behind the player or not. Incurs additional performance cost but resolves black borders on the edges of the screen at high fields of view. Perhaps necessary for normal fovs on ultrawide screens."
         );
 
+        allowExtreme = Config.Bind(
+            "General", "Allow Extreme Fields of View", false,
+            "Whether the mod should allow you to select a field of view value close to the theoretical limits of the projection or set a reasonable upper bound."
+        );
+
         if (LoadAssetBundle()) {
             SceneManager.sceneLoaded += OnSceneLoaded;
             patcher = new Harmony(MyPluginInfo.PLUGIN_GUID);
@@ -77,19 +84,21 @@ public class WideAnglePlugin : BaseUnityPlugin
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode) {
         if (scene.name == "Intro") return;
+        Func<Projection, float> boundingFunction = allowExtreme.Value? HardBound : SoftBound;
         // These here disgusting behemoths set the fov slider range
         if (scene.name == "Main-Menu") {
-            GameObject slider = GameObject.Find("Canvas - Screens/Screens/Canvas - Screen - Settings/Settings Menu/SettingsParent/Settings Pane/Video Settings/Options Tab/Video/SliderAsset - FOV/Slider");
-            slider.GetComponent<DarkMachine.UI.SubmitSlider>().maxValue = 270f;
+            Transform canvas = GameObject.Find("Canvas - Screens").transform;
+            var slider = canvas.Find("Screens/Canvas - Screen - Settings/Settings Menu/SettingsParent/Settings Pane/Video Settings/Main Panel/Tab - Video/Column - Video/SliderAsset - FOV/Slider");
+            slider.GetComponent<DarkMachine.UI.SubmitSlider>().maxValue = boundingFunction(projection.Value);
         } else {
             Transform pause = GameObject.Find("Pause").transform;
-            var slider = pause.GetChild(0).GetChild(3).GetChild(0).GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(7).GetChild(1);
-            slider.GetComponent<DarkMachine.UI.SubmitSlider>().maxValue = 270f;
+            var slider = pause.Find("Pause Menu/Settings Menu/SettingsParent/Settings Pane/Video Settings/Main Panel/Tab - Video/Column - Video/SliderAsset - FOV/Slider");
+            slider.GetComponent<DarkMachine.UI.SubmitSlider>().maxValue = boundingFunction(projection.Value);
 
             // Setup the camera
             Transform camParent = Camera.main.transform;
             // Setup screen
-            GameObject screen = SetupProjector();
+            GameObject screen = SetupProjector("Geometry Screen");
             screen.GetComponent<MeshRenderer>().material = new Material(wideAngleShader);
             screen.GetComponent<MeshRenderer>().material.renderQueue = (int)RenderQueue.Geometry;
             screen.transform.localPosition = new Vector3(0f, 0f, 0.5f);
@@ -99,7 +108,7 @@ public class WideAnglePlugin : BaseUnityPlugin
             GameObject cam = GameObject.Instantiate(wideAngleCamera, camParent, false);
             cam.name = "Wide Angle Camera";
             CameraManager cMan = cam.AddComponent<CameraManager>();
-            cMan.Init(screen.GetComponent<MeshRenderer>().material, Camera.main, renderBackface.Value, (int)quality.Value);
+            cMan.Init(screen.GetComponent<MeshRenderer>().material, Camera.main, renderBackface.Value, (int)quality.Value, projection.Value, boundingFunction);
             CameraManager.Instance = cMan;
             // Now finishing touches
             Camera.main.nearClipPlane = 0.0f;
@@ -114,7 +123,7 @@ public class WideAnglePlugin : BaseUnityPlugin
             // Inventory camera, this is easily the most wasteful thing I think I've ever attempted
             // but since the inventory will mostly be transparency I hope it's not that big an impact
             // Start by setting up the screen, maybe we'll just have it overlay the main projection?
-            GameObject handScreen = SetupProjector();
+            GameObject handScreen = SetupProjector("Hand Screen");
             handScreen.GetComponent<MeshRenderer>().material = new Material(wideAngleShader);
             handScreen.transform.localPosition = new Vector3(0f, 0f, 0.25f);
             handScreen.transform.SetParent(camParent, false);
@@ -124,7 +133,7 @@ public class WideAnglePlugin : BaseUnityPlugin
             handCam.name = "Wide Angle Hand Camera";
             // The legendary hand man, he's here...
             CameraManager handMan = handCam.AddComponent<CameraManager>();
-            handMan.Init(handScreen.GetComponent<MeshRenderer>().material, invCam, renderBackface.Value, (int)quality.Value);
+            handMan.Init(handScreen.GetComponent<MeshRenderer>().material, invCam, renderBackface.Value, (int)quality.Value, projection.Value, boundingFunction);
             CameraManager.HandInstance = handMan;
             var handMen = handMan.GetSubCameras();
             // This joke has gone way too far but I don't really care enough to make the values actually descript
@@ -137,8 +146,42 @@ public class WideAnglePlugin : BaseUnityPlugin
         }
     }
 
+    // A reasonable upper bound for a given projection such that the game remains legible
+    public float SoftBound(Projection projection) {
+        Func<float, float> Sin = Mathf.Sin;
+        Func<float, float> Asin = Mathf.Asin;
+        Func<float, float> Tan = Mathf.Tan;
+        Func<float, float> Atan = Mathf.Atan;
+
+        float deg = Mathf.Deg2Rad;
+        float diag = Mathf.Sqrt(1 + Camera.main.aspect*Camera.main.aspect);
+
+        // We use the diagonal here instead of the aspect ratio so that
+        // the corner of the screen is at the bound instead of the horizontal edges
+        float fov = projection switch {
+            Projection.Stereographic => 4f*Atan(Tan(315f*deg*0.25f) / diag) / deg,
+            Projection.Equidistant => 360f/diag,
+            Projection.Equisolid => 4f*Asin(Sin(360f*deg*0.25f) / diag) / deg,
+            Projection.Panini => 170.0f, // The pains of using vertical fov in panini
+            _ => 350f // Shouldn't be possible
+        };
+
+        return Mathf.Floor(fov);
+    }
+
+    // Absolute upper bound of a given projection (pretty much)
+    public float HardBound(Projection projection) {
+        return projection switch {
+            Projection.Stereographic => 350.0f,
+            Projection.Equidistant   => 360.0f,
+            Projection.Equisolid     => 360.0f, // Yeah sure
+            Projection.Panini        => 170.0f,
+            _ => 350.0f // Shouldn't be possible
+        };
+    }
+
     // Constructs a GameObject with a fullscreen triangle mesh without any material
-    private GameObject SetupProjector() {
+    private GameObject SetupProjector(string name) {
         // Let us first generate the mesh
         Mesh m = new Mesh();
         m.name = "Triangle";
@@ -162,7 +205,7 @@ public class WideAnglePlugin : BaseUnityPlugin
         m.RecalculateBounds();
 
         // Now create the projector which will be returned
-        var obj = new GameObject("Projector Screen");
+        var obj = new GameObject(name);
         var mf = obj.AddComponent<MeshFilter>();
         var mr = obj.AddComponent<MeshRenderer>();
 

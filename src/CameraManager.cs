@@ -1,6 +1,7 @@
-using UnityEngine;
+using System;
 using System.Reflection;
 using System.Collections;
+using UnityEngine;
 
 namespace WideAngleCamera;
 
@@ -18,6 +19,9 @@ public class CameraManager : MonoBehaviour {
 	private RenderTexture cubemap;
 	private Material screen;
 
+	private WideAnglePlugin.Projection projection;
+	private Func<WideAnglePlugin.Projection, float> GetBound;
+
 	// FOV animation parameters
 	private float curFOV;
 	private float sprintFOV;
@@ -32,7 +36,14 @@ public class CameraManager : MonoBehaviour {
 		internal set { screen.SetFloat("_FOV", value); }
 	}
 
-	internal void Init(Material projector, Camera orig, bool useBack, int size) {
+	internal void Init(
+		Material projector,
+		Camera orig,
+		bool useBack,
+		int size,
+		WideAnglePlugin.Projection projection,
+		Func<WideAnglePlugin.Projection, float> bound
+	) {
 		// Cache common data for less verbosity
 		player = ENT_Player.GetPlayer();
 		settings = SettingsManager.settings;
@@ -59,6 +70,9 @@ public class CameraManager : MonoBehaviour {
 		screen = projector;
 		screen.mainTexture = cubemap;
 		FOV = curFOV;
+
+		this.projection = projection;
+		GetBound = bound;
 	}
 
 	private void Update() {
@@ -71,7 +85,7 @@ public class CameraManager : MonoBehaviour {
 		Graphics.CopyTexture(down.targetTexture, 0, cubemap, 2);
 
 		if (!player.IsLocked()) {
-			curFOV = Mathf.Clamp(curFOV + player.curBuffs.GetBuff("addFOV"), 60f, 315f);
+			curFOV = Mathf.Clamp(curFOV + player.curBuffs.GetBuff("addFOV"), 75f, GetBound(projection));
 			FOV = Math.ExpDecay(FOV, curFOV, 5f, Time.deltaTime);
 			curFOV = settings.playerFOV;
 			sprintFOV = curFOV + 15f; // This is the only mechanism I see through which this can update realtime
