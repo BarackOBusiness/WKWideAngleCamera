@@ -58,11 +58,8 @@ Shader "Custom/Stereographic" {
                 {
                     // Point to centered plane coordinates
                     float2 p = i.uv * 2.0 - 1.0;
-                    // Branchless form of scaling the minor axis down by the aspect ratio
-                    float aspect = _ScreenParams.x / _ScreenParams.y;
-                    bool widescreen = aspect > 1.0;
-                    p.y /= widescreen * aspect + !widescreen;
-                    p.x /= !widescreen * aspect + widescreen;
+                    // HOR+ aspect ratio scaling
+                    p.x *= _ScreenParams.x / _ScreenParams.y;
                     // Scale to FOV
                     p *= tan(radians(_FOV) * 0.25);
 

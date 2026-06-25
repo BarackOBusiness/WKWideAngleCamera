@@ -66,11 +66,8 @@ Shader "Custom/Equidistant" {
                 {
                     // Convert the point on screen into centered plane coordinates
                     float2 p = i.uv * 2.0 - 1.0;
-                    // Branchless aspect ratio scaling
-                    float aspect = _ScreenParams.x / _ScreenParams.y;
-                    bool widescreen = aspect > 1.0;
-                    p.x /= !widescreen * aspect + widescreen;
-                    p.y /= widescreen * aspect + !widescreen;
+                    // HOR+ aspect ratio scaling
+                    p.x *= _ScreenParams.x / _ScreenParams.y;
                     // Scale to FOV, I straight logic'd this one out myself
                     p *= radians(_FOV) / 2;
 

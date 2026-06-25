@@ -57,14 +57,11 @@ Shader "Custom/Equisolid" {
                 {
                     // Screen point to centered plane coordinates
                     float2 p = i.uv * 2.0 - 1.0;
-                    // Branchless form of scaling the minor axis down by the aspect ratio
-                    float aspect = _ScreenParams.x / _ScreenParams.y;
-                    bool widescreen = aspect > 1.0;
-                    p.y /= widescreen * aspect + !widescreen;
-                    p.x /= !widescreen * aspect + widescreen;
+                    // HOR+ aspect ratio scaling
+                    p.x *= _ScreenParams.x / _ScreenParams.y;
                     // r = 2fsin(θ/2), z=0 on sphere is r=√2
                     // yeah it literally is just fitting the fov range into the disk
-                    p *= 2*sin(radians(_FOV) * 0.25);
+                    p *= 2*sin(radians(_FOV) / 4);
 
                     float3 dir = DiskToSphere(p);
                     return texCUBE(_MainTex, dir);

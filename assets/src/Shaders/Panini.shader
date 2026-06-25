@@ -78,24 +78,24 @@ SubShader {
             {
                 // Map point to centered view plane coordinates
                 float2 p = i.uv * 2.0 - 1.0;
-                float aspect = _ScreenParams.x / _ScreenParams.y;
+                // HOR+ aspect ratio scaling
+                p.x *= _ScreenParams.x / _ScreenParams.y;
 
-                // Compute edges of view into scaling factors
-                float phi_edge = radians(_FOV);
-                float h_edge;
+                // According to the panini projection paper, sin(phi)*(d+1)/(d+cos(phi)) computes x/K
+                // unlike other projections which compute r; the distance regardless of axis.
+                // I'm going to roll with it and as a result the fov value is going to be
+                // completely meaningless, however if you input it in the axis converter the horizontal
+                // fov should be correct I believe somewhat
+                float phi = radians(_FOV) * 0.5;
+                float scale;
                 if (_D == 1) {
-                    h_edge = 2*tan(phi_edge * 0.25);
+                    scale = tan(phi);
                 } else {
-                    h_edge = sin(phi_edge)*(_D+1)/(_D+cos(phi_edge));
+                    scale = sin(phi)*(_D+1)/(_D+cos(phi));
                 }
 
-                float h = p.x * h_edge;
-                float v = p.y * h_edge;
-
-                // Branchless form of scaling the minor axis down by the aspect ratio
-                bool widescreen = aspect > 1.0;
-                v /= widescreen * aspect + !(widescreen);
-                h /= !widescreen * aspect + widescreen;
+                float h = p.x * scale;
+                float v = p.y * scale;
 
                 float2 c = MapToCylinder(h, v);
                 float3 dir = MapToSphere(c);
