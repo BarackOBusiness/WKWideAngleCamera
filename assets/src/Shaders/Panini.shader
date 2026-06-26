@@ -3,16 +3,18 @@ Properties {
     _MainTex ("Cubemap", CUBE) = "" {}
     _FOV ("Field of view (deg)", Range(1,359)) = 160
     _D ("Distance", Range(0.0,1.0)) = 1.0
+    _SrcBlend ("Src Blend", Int) = 1 // BlendMode.One
+    _DstBlend ("Dst Blend", Int) = 0 // BlendMode.Zero
 }
 
 SubShader {
-    Tags { "RenderType" = "Transparent" "Queue" = "Transparent" }
+    Tags { "RenderType" = "Opaque" "Queue" = "Geometry" }
     Cull Off
     ZTest Always
     ZWrite Off
     Lighting Off
     Fog { Mode Off }
-    Blend SrcAlpha OneMinusSrcAlpha
+    Blend [_SrcBlend] [_DstBlend]
 
     Pass {
         CGPROGRAM

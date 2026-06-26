@@ -100,7 +100,6 @@ public class WideAnglePlugin : BaseUnityPlugin
             // Setup screen
             GameObject screen = SetupProjector("Geometry Screen");
             screen.GetComponent<MeshRenderer>().material = new Material(wideAngleShader);
-            screen.GetComponent<MeshRenderer>().material.renderQueue = (int)RenderQueue.Geometry;
             screen.transform.localPosition = new Vector3(0f, 0f, 0.5f);
             screen.transform.SetParent(camParent, false);
             screen.layer = 31;
@@ -117,14 +116,19 @@ public class WideAnglePlugin : BaseUnityPlugin
             Camera.main.orthographic = true;
             Camera.main.orthographicSize = 0.75f;
             Camera.main.useOcclusionCulling = false;
-            Camera.main.clearFlags = CameraClearFlags.SolidColor;
+            Camera.main.clearFlags = CameraClearFlags.Nothing;
 
             if (!syncHands.Value) return;
             // Inventory camera, this is easily the most wasteful thing I think I've ever attempted
             // but since the inventory will mostly be transparency I hope it's not that big an impact
             // Start by setting up the screen, maybe we'll just have it overlay the main projection?
             GameObject handScreen = SetupProjector("Hand Screen");
-            handScreen.GetComponent<MeshRenderer>().material = new Material(wideAngleShader);
+            var handMat = new Material(wideAngleShader);
+            handMat.SetOverrideTag("RenderType", "Transparent");
+            handMat.renderQueue = (int)RenderQueue.Transparent;
+            handMat.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
+            handMat.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+            handScreen.GetComponent<MeshRenderer>().material = handMat;
             handScreen.transform.localPosition = new Vector3(0f, 0f, 0.25f);
             handScreen.transform.SetParent(camParent, false);
             handScreen.layer = 31;
