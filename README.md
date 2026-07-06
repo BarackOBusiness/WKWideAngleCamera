@@ -1,6 +1,6 @@
 # White Knuckle Wide Angle Camera Mod
 Adds novel projection techniques to White Knuckle to allow for much greater fields of view with more pleasant distortion profiles.
-![](https://github.com/barackobusiness/wkwideanglecamera/blob/master/assets/gallery/preview.avif?raw=true)
+![](https://github.com/BarackOBusiness/WKWideAngleCamera/raw/refs/heads/lfs/assets/gallery/preview.avif)
 *Note, the black flickering present in the bottom left corner of these and other showcase clips are not present in the release build of the mod, this video was taken earlier in development*
 
 This is done by rendering the game six times in each direction to the panosphere which represents the view in all directions from the player's perspective.
@@ -38,22 +38,6 @@ it retains the most legibility at the focal point for extreme fields of view, ho
 ### Panini Projection
 Panini projection is a kind of cylindrical projection which preserves vertical lines and radial lines through the image center, keeping them straight in the resulting view.
 This can give a very convincing rectilinear perspective view; people generally prefer panini views over stereographic views in still image or video, this favor may weaken during interactive gameplay.
-
-## Old Gallery
-![](https://github.com/barackobusiness/wkwideanglecamera/blob/master/assets/gallery/stereographic-250fov.avif?raw=true)\
-*Walking along the haunted pier and climbing some buildings under stereographic projection at 250° hfov*
-
-![](https://github.com/barackobusiness/wkwideanglecamera/blob/master/assets/gallery/panini-250fov.avif?raw=true)\
-*Entering habitation yellow using panini projection at 250° hfov*
-
-![](https://github.com/barackobusiness/wkwideanglecamera/blob/master/assets/gallery/stereographic-135fov.avif?raw=true)\
-*A climb through the waste heap at 135° hfov with stereographic projection*
-
-![](https://github.com/barackobusiness/wkwideanglecamera/blob/master/assets/gallery/default-135fov.avif?raw=true)\
-*The same path taken at the same field of view but in the vanilla perspective/rectilinear projection.*
-
-Equidistant and equisolid projection gallery additions will be made at some point.™ If I don't get to it however, feel free to submit your own gameplay
-on the Wide Angle Camera thread of #modding-releases in the white knuckle discord if you feel something is a good candidate to be featured here
 
 ## Further Information
 I've done my best to explain the included projections in terms of the effects they bring or a more intuitive spatial manner, but if you want the more mathematical precise definitions, most of what I've referenced to build this lies on wikipedia (except panini projection) on the following pages: [Stereographic Projection](https://en.wikipedia.org/wiki/Stereographic_projection), [Azimuthal Equidistant Projection](https://en.wikipedia.org/wiki/Stereographic_projection) [Equisolid Angle Projection](https://en.wikipedia.org/wiki/Lambert_azimuthal_equal-area_projection) [Panini Projection](http://tksharpless.net/vedutismo/Pannini/)
