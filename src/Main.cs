@@ -15,7 +15,8 @@ public class WideAnglePlugin : BaseUnityPlugin
 {
     private ConfigEntry<Quality> quality;
     private ConfigEntry<Projection> projection;
-    private ConfigEntry<bool> syncHands;
+    private ConfigEntry<float> Z;
+    private ConfigEntry<bool> syncSprites;
     private ConfigEntry<bool> renderBackface;
     private ConfigEntry<bool> allowExtreme;
 
@@ -56,11 +57,19 @@ public class WideAnglePlugin : BaseUnityPlugin
             """
         );
 
-        syncHands = Config.Bind(
-            "General", "Synchronize Hands", true,
+        Z = Config.Bind(
+            "Projection Configuration", "Projection Z Component", 1.0f,
             """
-            Whether to synchronize hands or not. When synchronized, a second wide angle projection camera is created with the sole purpose to render hands in the world, which incurs a not insignificant rendering cost.
-            However hand sprites will be rendered appropriately in the position where you have grabbed and should not diverge from there.
+            The Z coordinate relative to the center of the panosphere that the projection point lies on.
+            Only applies to stereographic and panini projection (currently only panini projection implemented)
+            """
+        );
+
+        syncSprites = Config.Bind(
+            "General", "Synchronize Sprites", true,
+            """
+            Whether to synchronize sprite objects (such as hands) or not. When synchronized, a second wide angle projection camera is created with the sole purpose to render sprites in world space.
+            This incurs a not insignificant rendering cost however hands and other sprites in the world will appear in their appropriate positions.
             """
         );
 
@@ -78,6 +87,9 @@ public class WideAnglePlugin : BaseUnityPlugin
             SceneManager.sceneLoaded += OnSceneLoaded;
             patcher = new Harmony(MyPluginInfo.PLUGIN_GUID);
             patcher.PatchAll(typeof(UT_CameraTakeoverPatches));
+            if (syncSprites.Value) {
+                patcher.PatchAll(typeof(DEN_Hopper_TickPatches));
+            }
             Logger.LogInfo("Wide angle views are NOW possible");
         } // Abort the rest of setup if the asset bundle could not successfully load
     }
@@ -109,6 +121,9 @@ public class WideAnglePlugin : BaseUnityPlugin
             CameraManager cMan = cam.AddComponent<CameraManager>();
             cMan.Init(screen.GetComponent<MeshRenderer>().material, Camera.main, renderBackface.Value, (int)quality.Value, projection.Value, boundingFunction);
             CameraManager.Instance = cMan;
+            if (projection.Value == Projection.Panini) {
+                cMan.GetComponent<MeshRenderer>().material.SetFloat("_D", Z.Value);
+            }
             // Now finishing touches
             Camera.main.nearClipPlane = 0.0f;
             Camera.main.farClipPlane = 1.0f;
@@ -118,7 +133,7 @@ public class WideAnglePlugin : BaseUnityPlugin
             Camera.main.useOcclusionCulling = false;
             Camera.main.clearFlags = CameraClearFlags.Nothing;
 
-            if (!syncHands.Value) return;
+            if (!syncSprites.Value) return;
             // Inventory camera, this is easily the most wasteful thing I think I've ever attempted
             // but since the inventory will mostly be transparency I hope it's not that big an impact
             // Start by setting up the screen, maybe we'll just have it overlay the main projection?
