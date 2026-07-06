@@ -122,7 +122,7 @@ public class WideAnglePlugin : BaseUnityPlugin
             cMan.Init(screen.GetComponent<MeshRenderer>().material, Camera.main, renderBackface.Value, (int)quality.Value, projection.Value, boundingFunction);
             CameraManager.Instance = cMan;
             if (projection.Value == Projection.Panini) {
-                cMan.GetComponent<MeshRenderer>().material.SetFloat("_D", Z.Value);
+                screen.GetComponent<MeshRenderer>().material.SetFloat("_D", Z.Value);
             }
             // Now finishing touches
             Camera.main.nearClipPlane = 0.0f;
