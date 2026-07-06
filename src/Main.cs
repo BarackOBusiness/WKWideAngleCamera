@@ -115,15 +115,15 @@ public class WideAnglePlugin : BaseUnityPlugin
             screen.transform.localPosition = new Vector3(0f, 0f, 0.5f);
             screen.transform.SetParent(camParent, false);
             screen.layer = 31;
+            if (projection.Value == Projection.Panini) {
+                screen.GetComponent<MeshRenderer>().material.SetFloat("_D", Z.Value);
+            }
             // Setup camera
             GameObject cam = GameObject.Instantiate(wideAngleCamera, camParent, false);
             cam.name = "Wide Angle Camera";
             CameraManager cMan = cam.AddComponent<CameraManager>();
             cMan.Init(screen.GetComponent<MeshRenderer>().material, Camera.main, renderBackface.Value, (int)quality.Value, projection.Value, boundingFunction);
             CameraManager.Instance = cMan;
-            if (projection.Value == Projection.Panini) {
-                screen.GetComponent<MeshRenderer>().material.SetFloat("_D", Z.Value);
-            }
             // Now finishing touches
             Camera.main.nearClipPlane = 0.0f;
             Camera.main.farClipPlane = 1.0f;
@@ -147,6 +147,9 @@ public class WideAnglePlugin : BaseUnityPlugin
             handScreen.transform.localPosition = new Vector3(0f, 0f, 0.25f);
             handScreen.transform.SetParent(camParent, false);
             handScreen.layer = 31;
+            if (projection.Value == Projection.Panini) {
+                handScreen.GetComponent<MeshRenderer>().material.SetFloat("_D", Z.Value);
+            }
             Camera invCam = camParent.Find("Inventory Camera").GetComponent<Camera>();
             GameObject handCam = GameObject.Instantiate(wideAngleCamera, camParent, false);
             handCam.name = "Wide Angle Hand Camera";
