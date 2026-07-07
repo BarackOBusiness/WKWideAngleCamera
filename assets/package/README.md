@@ -1,6 +1,6 @@
 # White Knuckle Wide Angle Camera Mod
 Adds novel projection techniques to White Knuckle to allow for much greater fields of view with more pleasant distortion profiles.
-![](https://github.com/BarackOBusiness/WKWideAngleCamera/raw/refs/heads/lfs/assets/gallery/preview.avif)
+![](https://github.com/BarackOBusiness/WKWideAngleCamera/raw/refs/heads/master/assets/gallery/preview.avif)
 *Note, the black flickering present in the bottom left corner of these and other showcase clips are not present in the release build of the mod, this video was taken earlier in development*
 
 This is done by rendering the game six times in each direction to the panosphere which represents the view in all directions from the player's perspective.
@@ -22,6 +22,8 @@ However for stereographic projection this point resides at the north pole, there
 Unlike rectilinear projection which cannot possibly cast a ray through the equator or anywhere behind it such that it will intersect the view plane.
 As a result stereographic projection is asymptotically limited to a field of view of 360° instead of 180°.
 Stereographic projection is a conformal projection that preserves angles at intersections of curves which means locally shape is preserved, unlike rectilinear projection which preserves the straightness of lines but stretches shapes.
+![](https://github.com/BarackOBusiness/WKWideAngleCamera/raw/refs/heads/master/assets/gallery/stereographic-242x180.avif)\
+*A stroll along the haunted pier at 242x180° field of view*
 
 ### Azimuthal Equidistant Projection
 Equidistant projection projects points onto the view plane such that their distance from the center is proportionally correct to the distance to that center point on the panosphere,
@@ -29,15 +31,21 @@ and such that all points are along the correct direction from that center.
 As you might have noticed from that description, distances from any point on the screen to the reticle correspond directly to the angle between the rays intersecting that point in space and the reticle.
 As such, a given point on the screen will always require the same amount of mouse motion to point yourself towards, unlike other projections which do not preserve angular distance.
 I suspect this property might be the most beneficial for aim once sufficiently accustomed to the visuals. I also suspect it is the projection Hyper Demon uses, although it uses a different projection technique that I cannot independently replicate to confirm.
+![](https://github.com/BarackOBusiness/WKWideAngleCamera/raw/refs/heads/master/assets/gallery/equidistant-270x152.avif)\
+*Ambling through the `x` at 270x152° field of view*
 
 ### Equisolid Angle Projection
 Equisolid projection maps the environment onto the view plane such that any given area on the plane is equal to the area it occupied on the panosphere.
 While this property is useful for some visualizations and cartographic operations it is not all that pleasant for gameplay, although, since it compresses marginal angles the most of the three fisheye projections,
 it retains the most legibility at the focal point for extreme fields of view, however this is countered by the fact that equisolid projection is bounded to a disk.
+![](https://github.com/BarackOBusiness/WKWideAngleCamera/raw/refs/heads/master/assets/gallery/equisolid-180x117.avif)\
+*A saunter across `x` at 180x117° field of view*
 
 ### Panini Projection
 Panini projection is a kind of cylindrical projection which preserves vertical lines and radial lines through the image center, keeping them straight in the resulting view.
 This can give a very convincing rectilinear perspective view; people generally prefer panini views over stereographic views in still image or video, this favor may weaken during interactive gameplay.
+![](https://github.com/BarackOBusiness/WKWideAngleCamera/raw/refs/heads/master/assets/gallery/panini-xxx.avif)\
+*Wandering into habitation yellow at xxx° field of view*
 
 ## Further Information
 I've done my best to explain the included projections in terms of the effects they bring or a more intuitive spatial manner, but if you want the more mathematical precise definitions, most of what I've referenced to build this lies on wikipedia (except panini projection) on the following pages: [Stereographic Projection](https://en.wikipedia.org/wiki/Stereographic_projection), [Azimuthal Equidistant Projection](https://en.wikipedia.org/wiki/Stereographic_projection) [Equisolid Angle Projection](https://en.wikipedia.org/wiki/Lambert_azimuthal_equal-area_projection) [Panini Projection](http://tksharpless.net/vedutismo/Pannini/)

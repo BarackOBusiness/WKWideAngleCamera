@@ -1,1 +1,4 @@
 assets/gallery/preview.avif filter=lfs diff=lfs merge=lfs -text
+assets/gallery/equidistant-270x152.avif filter=lfs diff=lfs merge=lfs -text
+assets/gallery/equisolid-241x117.avif filter=lfs diff=lfs merge=lfs -text
+assets/gallery/stereographic-242x180.avif filter=lfs diff=lfs merge=lfs -text
