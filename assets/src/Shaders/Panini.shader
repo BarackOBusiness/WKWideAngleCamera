@@ -89,12 +89,7 @@ SubShader {
                 // completely meaningless, however if you input it in the axis converter the horizontal
                 // fov should be correct I believe somewhat
                 float phi = radians(_FOV) * 0.5;
-                float scale;
-                if (_D == 1) {
-                    scale = tan(phi);
-                } else {
-                    scale = sin(phi)*(_D+1)/(_D+cos(phi));
-                }
+                float scale = sin(phi)*(_D+1)/(_D+cos(phi));
 
                 float h = p.x * scale;
                 float v = p.y * scale;

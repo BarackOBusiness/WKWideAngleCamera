@@ -1,5 +1,18 @@
 # Changelog
 
+## v3.2.0
+
+### Changes
+- "Synchronize Hands" option renamed to "Synchronize Sprites" and it now handles ticks as well as hands
+
+### Fixes
+- Removed hand flicker when initially grabbing a surface
+- Fixed alpha blending on base projection resulting in incorrect visuals for fog, skybox, and terminals
+
+### Additions
+- Configurable Z distance for the projection point on panini projection
+- Showcases are back on the README (some of them anyway, I still have some math to work out with panini)
+
 ## v3.1.0 - 2026-06-25
 
 ### Fixes
