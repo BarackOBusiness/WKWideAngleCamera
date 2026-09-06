@@ -2,6 +2,7 @@ using System;
 using System.Reflection;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace WideAngleCamera;
 
@@ -20,7 +21,7 @@ public class CameraManager : MonoBehaviour {
 	private Material screen;
 
 	private WideAnglePlugin.Projection projection;
-	private Func<WideAnglePlugin.Projection, float> GetBound;
+	internal Func<WideAnglePlugin.Projection, float> GetBound;
 
 	// FOV animation parameters
 	private float curFOV;
@@ -34,6 +35,11 @@ public class CameraManager : MonoBehaviour {
 	public float FOV {
 		get { return screen.GetFloat("_FOV"); }
 		internal set { screen.SetFloat("_FOV", value); }
+	}
+
+	internal Material Screen {
+		get { return screen; }
+		private set { screen = value; }
 	}
 
 	internal void Init(
@@ -114,5 +120,17 @@ public class CameraManager : MonoBehaviour {
 
 	internal Camera[] GetSubCameras() {
 		return new Camera[]{ front, back, left, right, up, down };
+	}
+
+	internal void SetProjection(WideAnglePlugin.Projection proj, Shader shader, bool transparent = false) {
+		projection = proj;
+		screen.shader = shader;
+
+		if (transparent) {
+            screen.SetOverrideTag("RenderType", "Transparent");
+            screen.renderQueue = (int)RenderQueue.Transparent;
+            screen.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
+            screen.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+		}
 	}
 }

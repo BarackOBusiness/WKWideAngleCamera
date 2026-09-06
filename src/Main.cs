@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
@@ -21,7 +22,7 @@ public class WideAnglePlugin : BaseUnityPlugin
     private ConfigEntry<bool> allowExtreme;
 
     private GameObject wideAngleCamera;
-    private Shader wideAngleShader;
+    private Shader[] wideAngleShaders;
 
     private Harmony patcher;
 
@@ -36,7 +37,9 @@ public class WideAnglePlugin : BaseUnityPlugin
         Stereographic,
         Equidistant,
         Equisolid,
-        Panini
+        Panini,
+        Equirectangular,
+        Mercator
     }
 
     private void Awake() {
@@ -90,6 +93,7 @@ public class WideAnglePlugin : BaseUnityPlugin
             if (syncSprites.Value) {
                 patcher.PatchAll(typeof(DEN_Hopper_TickPatches));
             }
+            this.Config.SettingChanged += OnSettingChanged;
             Logger.LogInfo("Wide angle views are NOW possible");
         } // Abort the rest of setup if the asset bundle could not successfully load
     }
@@ -97,74 +101,81 @@ public class WideAnglePlugin : BaseUnityPlugin
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode) {
         if (scene.name == "Intro") return;
         Func<Projection, float> boundingFunction = allowExtreme.Value? HardBound : SoftBound;
+        BoundSlider(scene, projection.Value, boundingFunction);
+        if (scene.name == "Main-Menu") return;
+        // Setup the camera
+        Transform camParent = Camera.main.transform;
+        // Setup screen
+        GameObject screen = SetupProjector("Geometry Screen");
+        var shader = wideAngleShaders
+            .Where(s => s.name == $"Custom/{projection.Value.ToString()}")
+            .First();
+        screen.GetComponent<MeshRenderer>().material = new Material(shader);
+        screen.transform.localPosition = new Vector3(0f, 0f, 0.5f);
+        screen.transform.SetParent(camParent, false);
+        screen.layer = 31;
+        // Setup camera
+        GameObject cam = GameObject.Instantiate(wideAngleCamera, camParent, false);
+        cam.name = "Wide Angle Camera";
+        CameraManager cMan = cam.AddComponent<CameraManager>();
+        cMan.Init(screen.GetComponent<MeshRenderer>().material, Camera.main, renderBackface.Value, (int)quality.Value, projection.Value, boundingFunction);
+        CameraManager.Instance = cMan;
+        // Now finishing touches
+        Camera.main.nearClipPlane = 0.0f;
+        Camera.main.farClipPlane = 1.0f;
+        Camera.main.cullingMask = 1 << 31;
+        Camera.main.orthographic = true;
+        Camera.main.orthographicSize = 0.75f;
+        Camera.main.useOcclusionCulling = false;
+        Camera.main.clearFlags = CameraClearFlags.Nothing;
+
+        // Inventory camera, this is easily the most wasteful thing I think I've ever attempted
+        // but since the inventory will mostly be transparency I hope it's not that big an impact
+        // Start by setting up the screen, maybe we'll just have it overlay the main projection?
+        GameObject handScreen = SetupProjector("Hand Screen");
+        var handMat = new Material(shader);
+        handMat.SetOverrideTag("RenderType", "Transparent");
+        handMat.renderQueue = (int)RenderQueue.Transparent;
+        handMat.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
+        handMat.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+        handScreen.GetComponent<MeshRenderer>().material = handMat;
+        handScreen.transform.localPosition = new Vector3(0f, 0f, 0.25f);
+        handScreen.transform.SetParent(camParent, false);
+        handScreen.layer = 31;
+        if (projection.Value == Projection.Panini)
+        {
+            screen.GetComponent<MeshRenderer>().material.SetFloat("_D", Z.Value);
+            handScreen.GetComponent<MeshRenderer>().material.SetFloat("_D", Z.Value);
+        }
+        Camera invCam = camParent.Find("Inventory Camera").GetComponent<Camera>();
+        GameObject handCam = GameObject.Instantiate(wideAngleCamera, camParent, false);
+        handCam.name = "Wide Angle Hand Camera";
+        // The legendary hand man, he's here...
+        CameraManager handMan = handCam.AddComponent<CameraManager>();
+        handMan.Init(handScreen.GetComponent<MeshRenderer>().material, invCam, renderBackface.Value, (int)quality.Value, projection.Value, boundingFunction);
+        CameraManager.HandInstance = handMan;
+        var handMen = handMan.GetSubCameras();
+        // This joke has gone way too far but I don't really care enough to make the variables actually descript
+        foreach (var man in handMen)
+        {
+            man.clearFlags = CameraClearFlags.SolidColor;
+            man.cullingMask = 1 << 28;
+        }
+        // Finally make it so that hands show up on the correct layer
+        handCam.AddComponent<HelpingHand>();
+        handCam.SetActive(syncSprites.Value);
+    }
+
+    public void BoundSlider(Scene scene, Projection projection, Func<Projection, float> bounder) {
         // These here disgusting behemoths set the fov slider range
         if (scene.name == "Main-Menu") {
             Transform canvas = GameObject.Find("Canvas - Screens").transform;
             var slider = canvas.Find("Screens/Canvas - Screen - Settings/Settings Menu/SettingsParent/Settings Pane/Video Settings/Main Panel/Tab - Video/Column - Video/SliderAsset - FOV/Slider");
-            slider.GetComponent<DarkMachine.UI.SubmitSlider>().maxValue = boundingFunction(projection.Value);
+            slider.GetComponent<DarkMachine.UI.SubmitSlider>().maxValue = bounder(projection);
         } else {
             Transform pause = GameObject.Find("Pause").transform;
             var slider = pause.Find("Pause Menu/Settings Menu/SettingsParent/Settings Pane/Video Settings/Main Panel/Tab - Video/Column - Video/SliderAsset - FOV/Slider");
-            slider.GetComponent<DarkMachine.UI.SubmitSlider>().maxValue = boundingFunction(projection.Value);
-
-            // Setup the camera
-            Transform camParent = Camera.main.transform;
-            // Setup screen
-            GameObject screen = SetupProjector("Geometry Screen");
-            screen.GetComponent<MeshRenderer>().material = new Material(wideAngleShader);
-            screen.transform.localPosition = new Vector3(0f, 0f, 0.5f);
-            screen.transform.SetParent(camParent, false);
-            screen.layer = 31;
-            if (projection.Value == Projection.Panini) {
-                screen.GetComponent<MeshRenderer>().material.SetFloat("_D", Z.Value);
-            }
-            // Setup camera
-            GameObject cam = GameObject.Instantiate(wideAngleCamera, camParent, false);
-            cam.name = "Wide Angle Camera";
-            CameraManager cMan = cam.AddComponent<CameraManager>();
-            cMan.Init(screen.GetComponent<MeshRenderer>().material, Camera.main, renderBackface.Value, (int)quality.Value, projection.Value, boundingFunction);
-            CameraManager.Instance = cMan;
-            // Now finishing touches
-            Camera.main.nearClipPlane = 0.0f;
-            Camera.main.farClipPlane = 1.0f;
-            Camera.main.cullingMask = 1 << 31;
-            Camera.main.orthographic = true;
-            Camera.main.orthographicSize = 0.75f;
-            Camera.main.useOcclusionCulling = false;
-            Camera.main.clearFlags = CameraClearFlags.Nothing;
-
-            if (!syncSprites.Value) return;
-            // Inventory camera, this is easily the most wasteful thing I think I've ever attempted
-            // but since the inventory will mostly be transparency I hope it's not that big an impact
-            // Start by setting up the screen, maybe we'll just have it overlay the main projection?
-            GameObject handScreen = SetupProjector("Hand Screen");
-            var handMat = new Material(wideAngleShader);
-            handMat.SetOverrideTag("RenderType", "Transparent");
-            handMat.renderQueue = (int)RenderQueue.Transparent;
-            handMat.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
-            handMat.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
-            handScreen.GetComponent<MeshRenderer>().material = handMat;
-            handScreen.transform.localPosition = new Vector3(0f, 0f, 0.25f);
-            handScreen.transform.SetParent(camParent, false);
-            handScreen.layer = 31;
-            if (projection.Value == Projection.Panini) {
-                handScreen.GetComponent<MeshRenderer>().material.SetFloat("_D", Z.Value);
-            }
-            Camera invCam = camParent.Find("Inventory Camera").GetComponent<Camera>();
-            GameObject handCam = GameObject.Instantiate(wideAngleCamera, camParent, false);
-            handCam.name = "Wide Angle Hand Camera";
-            // The legendary hand man, he's here...
-            CameraManager handMan = handCam.AddComponent<CameraManager>();
-            handMan.Init(handScreen.GetComponent<MeshRenderer>().material, invCam, renderBackface.Value, (int)quality.Value, projection.Value, boundingFunction);
-            CameraManager.HandInstance = handMan;
-            var handMen = handMan.GetSubCameras();
-            // This joke has gone way too far but I don't really care enough to make the values actually descript
-            foreach (var man in handMen) {
-                man.clearFlags = CameraClearFlags.SolidColor;
-                man.cullingMask = 1 << 28;
-            }
-            // Finally make it so that hands show up on the correct layer
-            handCam.AddComponent<HelpingHand>();
+            slider.GetComponent<DarkMachine.UI.SubmitSlider>().maxValue = bounder(projection);
         }
     }
 
@@ -174,17 +185,21 @@ public class WideAnglePlugin : BaseUnityPlugin
         Func<float, float> Asin = Mathf.Asin;
         Func<float, float> Tan = Mathf.Tan;
         Func<float, float> Atan = Mathf.Atan;
+        Func<float, float> Sinh = MathF.Sinh;
 
         float deg = Mathf.Deg2Rad;
         float diag = Mathf.Sqrt(1 + Camera.main.aspect*Camera.main.aspect);
 
         // We use the diagonal here instead of the aspect ratio so that
         // the corner of the screen is at the bound instead of the horizontal edges
+        // doesn't really apply for the cylindrical projections
         float fov = projection switch {
             Projection.Stereographic => 4f*Atan(Tan(315f*deg*0.25f) / diag) / deg,
             Projection.Equidistant => 360f/diag,
             Projection.Equisolid => 4f*Asin(Sin(360f*deg*0.25f) / diag) / deg,
             Projection.Panini => 170.0f, // The pains of using vertical fov in panini
+            Projection.Equirectangular => 360.0f / Camera.main.aspect / deg,
+            Projection.Mercator => 2f*Atan(Sinh(Mathf.PI / Camera.main.aspect)) / deg,
             _ => 350f // Shouldn't be possible
         };
 
@@ -194,10 +209,12 @@ public class WideAnglePlugin : BaseUnityPlugin
     // Absolute upper bound of a given projection (pretty much)
     public float HardBound(Projection projection) {
         return projection switch {
-            Projection.Stereographic => 350.0f,
-            Projection.Equidistant   => 360.0f,
-            Projection.Equisolid     => 360.0f, // Yeah sure
-            Projection.Panini        => 170.0f,
+            Projection.Stereographic   => 350.0f,
+            Projection.Equidistant     => 360.0f,
+            Projection.Equisolid       => 360.0f, // Yeah sure
+            Projection.Panini          => 170.0f,
+            Projection.Equirectangular => 180.0f,
+            Projection.Mercator        => 179.0f,
             _ => 350.0f // Shouldn't be possible
         };
     }
@@ -251,17 +268,47 @@ public class WideAnglePlugin : BaseUnityPlugin
         }
 
         wideAngleCamera = bundle.LoadAsset<GameObject>("Wide Angle Camera");
-        foreach (var shader in bundle.LoadAllAssets<Shader>()) {
-            if (shader.name == $"Custom/{projection.Value.ToString()}")
-                wideAngleShader = shader;
-        }
-        if (wideAngleCamera == null || wideAngleShader == null) {
+        wideAngleShaders = bundle.LoadAllAssets<Shader>();
+        if (wideAngleCamera == null || wideAngleShaders == null) {
             Logger.LogError("Wide angle views are NOT possible, please reacquire the asset bundle from https://github.com/BarackOBusiness/WKWideAngleCamera");
         }
 
         DontDestroyOnLoad(wideAngleCamera);
-        DontDestroyOnLoad(wideAngleShader);
+        wideAngleShaders.Do(s => DontDestroyOnLoad(s));
 
         return true;
+    }
+
+    private void OnSettingChanged(object sender, SettingChangedEventArgs arg) {
+        if (!(bool)CameraManager.Instance)
+            return;
+
+        if (arg.ChangedSetting == projection) {
+            Shader shader = wideAngleShaders
+                .Where(s => s.name == $"Custom/{projection.Value.ToString()}")
+                .First();
+            CameraManager.Instance.SetProjection(projection.Value, shader);
+            CameraManager.HandInstance.SetProjection(projection.Value, shader, true);
+        }
+
+        // syncsprites will not be able to change ingame, even unpatched
+        // vanilla behavior won't return so I won't bother implementing it
+
+        if (arg.ChangedSetting == renderBackface) {
+            CameraManager.Instance.GetSubCameras()[1].gameObject.SetActive(renderBackface.Value);
+            CameraManager.HandInstance.GetSubCameras()[1].gameObject.SetActive(renderBackface.Value);
+        }
+
+        if (arg.ChangedSetting == allowExtreme) {
+            Func<Projection, float> boundingFunction = allowExtreme.Value? HardBound : SoftBound;
+            BoundSlider(SceneManager.GetActiveScene(), projection.Value, boundingFunction);
+            CameraManager.Instance.GetBound = boundingFunction;
+            CameraManager.HandInstance.GetBound = boundingFunction;
+        }
+
+        if (arg.ChangedSetting == Z && projection.Value == Projection.Panini) {
+            CameraManager.Instance.Screen.SetFloat("_D", Z.Value);
+            CameraManager.HandInstance.Screen.SetFloat("_D", Z.Value);
+        }
     }
 }
