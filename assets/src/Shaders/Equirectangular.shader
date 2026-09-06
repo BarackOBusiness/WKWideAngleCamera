@@ -1,7 +1,7 @@
-Shader "Custom/Stereographic" {
+Shader "Custom/Equirectangular" {
     Properties {
         _MainTex ("Cubemap", CUBE) = "" {}
-        _FOV ("Field of View (deg)", Range(1,359)) = 135
+        _FOV ("Field of View (deg)", Range(1, 359)) = 135
         _SrcBlend ("Src Blend", Int) = 1 // BlendMode.One
         _DstBlend ("Dst Blend", Int) = 0 // BlendMode.Zero
     }
@@ -21,6 +21,7 @@ Shader "Custom/Stereographic" {
                 #pragma fragment frag
 
                 #include "UnityCG.cginc"
+                #include "WideAngle.cginc"
 
                 struct appdata {
                     float4 vertex : POSITION;
@@ -35,18 +36,6 @@ Shader "Custom/Stereographic" {
                 samplerCUBE _MainTex;
                 float _FOV;
 
-                // https://en.wikipedia.org/wiki/Stereographic_projection#Other_conventions
-                // South-pole plane orientation instead of equatorial
-                float3 invStereographic(float2 p) {
-                    float r2 = dot(p, p);
-                    return normalize(float3(
-                        p.x / (1 + r2),
-                        p.y / (1 + r2),
-                        // flipped z sign to flip the handedness
-                        (1 - r2) / (2 + 2*r2)
-                    ));
-                }
-
                 v2f vert (appdata v) {
                     v2f o;
                     o.pos = float4(v.vertex.xy, 0, 1);
@@ -54,17 +43,15 @@ Shader "Custom/Stereographic" {
                     return o;
                 }
 
-                // All of the shaders don't need to be commented, it's all the same flow
-                // I'll leave this one's as the source of truth
                 fixed4 frag (v2f i) : SV_Target {
-                    // Point to centered plane coordinates
                     float2 p = i.uv * 2.0 - 1.0;
-                    // HOR+ aspect ratio scaling
+                    // HOR+ remains
                     p.x *= _ScreenParams.x / _ScreenParams.y;
-                    // Scale to FOV
-                    p *= tan(radians(_FOV) * 0.25);
+                    p *= radians(_FOV) / 2;
 
-                    float3 dir = invStereographic(p);
+                    // https://en.wikipedia.org/wiki/Equirectangular_projection#Reverse
+                    // equirectangular plate carrée lmao
+                    float3 dir = GeoToCartesian(p.y, p.x);
                     return texCUBE(_MainTex, dir);
                 }
             ENDCG
