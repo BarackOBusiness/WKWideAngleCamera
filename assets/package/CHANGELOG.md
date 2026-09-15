@@ -1,5 +1,13 @@
 # Changelog
 
+## v3.3.0 - 2026-09-15
+
+### Additions
+- Added the mercator and equirectangular projection, both capable of a full (albeit unrecommended) 360 fov
+
+### Changes
+- Projection, backface toggle, extreme fov toggle, and Z options now respond to changes ingame
+
 ## v3.2.0
 
 ### Changes
