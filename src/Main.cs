@@ -198,7 +198,7 @@ public class WideAnglePlugin : BaseUnityPlugin
             Projection.Equidistant => 360f/diag,
             Projection.Equisolid => 4f*Asin(Sin(360f*deg*0.25f) / diag) / deg,
             Projection.Panini => 170.0f, // The pains of using vertical fov in panini
-            Projection.Equirectangular => 360.0f / Camera.main.aspect / deg,
+            Projection.Equirectangular => 180.0f, // The maximum without any looped visuals
             Projection.Mercator => 2f*Atan(Sinh(Mathf.PI / Camera.main.aspect)) / deg,
             _ => 350f // Shouldn't be possible
         };
@@ -213,7 +213,7 @@ public class WideAnglePlugin : BaseUnityPlugin
             Projection.Equidistant     => 360.0f,
             Projection.Equisolid       => 360.0f, // Yeah sure
             Projection.Panini          => 170.0f,
-            Projection.Equirectangular => 180.0f,
+            Projection.Equirectangular => 360.0f / Camera.main.aspect, // 360 horizontal, but with looped vertical
             Projection.Mercator        => 179.0f,
             _ => 350.0f // Shouldn't be possible
         };

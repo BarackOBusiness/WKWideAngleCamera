@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.3.1 - 2026-09-15
+
+### Fixes
+- FOV slider no longer bounds at over 11000 for equirectangular projection
+
 ## v3.3.0 - 2026-09-15
 
 ### Additions
