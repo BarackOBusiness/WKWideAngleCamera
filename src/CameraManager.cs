@@ -91,7 +91,9 @@ public class CameraManager : MonoBehaviour {
 		Graphics.CopyTexture(down.targetTexture, 0, cubemap, 2);
 
 		if (!player.IsLocked()) {
-			curFOV = Mathf.Clamp(curFOV + player.curBuffs.GetBuff("addFOV"), 75f, GetBound(projection));
+			if (!settings.disableFOVChange) {
+				curFOV = Mathf.Clamp(curFOV + player.curBuffs.GetBuff("addFOV"), 75f, GetBound(projection));
+			}
 			FOV = Math.ExpDecay(FOV, curFOV, 5f, Time.deltaTime);
 			curFOV = settings.playerFOV;
 			sprintFOV = curFOV + 15f; // This is the only mechanism I see through which this can update realtime
