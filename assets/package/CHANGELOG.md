@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.4.0 - 2026-09-24
+
+### Fixes
+- Compatibility with The Accessibility Update
+
 ## v3.3.1 - 2026-09-15
 
 ### Fixes
