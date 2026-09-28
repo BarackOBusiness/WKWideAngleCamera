@@ -90,6 +90,7 @@ public class WideAnglePlugin : BaseUnityPlugin
             SceneManager.sceneLoaded += OnSceneLoaded;
             patcher = new Harmony(MyPluginInfo.PLUGIN_GUID);
             patcher.PatchAll(typeof(UT_CameraTakeoverPatches));
+            Hooks.Hook(Logger);
             if (syncSprites.Value) {
                 patcher.PatchAll(typeof(DEN_Hopper_TickPatches));
             }

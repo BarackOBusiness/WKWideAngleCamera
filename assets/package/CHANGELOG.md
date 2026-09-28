@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.4.1 - 2026-09-27
+
+### Fixes
+- Hands stop scaling past 140 fov with no fov change option enabled
+
 ## v3.4.0 - 2026-09-24
 
 ### Fixes
