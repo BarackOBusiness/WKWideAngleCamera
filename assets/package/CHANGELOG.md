@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.4.2 - 2026-10-07
+
+### Fixes
+- The remains now actually chase you... whoops
+
 ## v3.4.1 - 2026-09-27
 
 ### Fixes

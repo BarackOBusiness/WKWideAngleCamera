@@ -33,6 +33,7 @@ public static class DEN_Hopper_TickPatches {
 }
 
 public static class Hooks {
+	private static BindingFlags Public = BindingFlags.Public;
 	private static BindingFlags Private = BindingFlags.NonPublic;
 	private static BindingFlags Instance = BindingFlags.Instance;
 
@@ -41,9 +42,11 @@ public static class Hooks {
 
 	public static void Hook(BepInEx.Logging.ManualLogSource logger) {
 		_logger = logger;
-		logger.LogInfo("Hooking `ENT_Player::SetCameraFov`");
 		_hooks = new List<ILHook>(2);
+		logger.LogInfo("Hooking `ENT_Player::SetCameraFov`");
 		_hooks.Add(new ILHook(GetMethod<ENT_Player>("SetCameraFov", Private | Instance), SetCameraFov));
+		logger.LogInfo("Hooking `DEN_Remains_Active::Update`");
+		_hooks.Add(new ILHook(GetMethod<DEN_Remains_Active>("Update", Public | Instance), Update));
 	}
 
 	public static void Unhook() {
@@ -59,12 +62,33 @@ public static class Hooks {
 			x => x.MatchLdsfld<SettingsManager>("settings"),
 			x => x.MatchLdfld<SettingsManager.GameSettings>("playerFOV")
 		)) {
-			_logger.LogInfo("Matched IL at SetCameraFov");
+			_logger.LogInfo("Matched successfully at ENT_Player::SetCameraFov");
 			cursor.EmitDelegate((float fov) => {
 				return Mathf.Clamp(fov, 60f, 140f);
 			});
 		} else {
-			_logger.LogInfo("Failed to hook SetCameraFov");
+			_logger.LogInfo("Failed to hook ENT_Player::SetCameraFov");
+		}
+	}
+
+	private static void Update(ILContext il) {
+		var cursor = new ILCursor(il);
+
+		if (cursor.TryGotoNext(
+			i => i.MatchLdarg(0),
+			i => i.MatchLdfld<DEN_Remains_Active>("meshRenderer"),
+			i => i.MatchCallvirt<Renderer>("get_isVisible"),
+			i => i.MatchBrfalse(out _)
+		)) {
+			_logger.LogInfo("Matched successfully at DEN_Remains_Active::Update");
+			cursor.Index += 2;
+			cursor.Remove(); // cut the isVisible, leaving meshRenderer on the stack
+			cursor.EmitDelegate((SkinnedMeshRenderer rend) => {
+				var cam = ENT_Player.GetPlayer().camRoot;
+				return cam.CanSeeTarget(rend.transform, CameraManager.Instance.FOV / 2f);
+			});
+		} else {
+			_logger.LogInfo("Failed to hook DEN_Remains_Active::Update");
 		}
 	}
 
