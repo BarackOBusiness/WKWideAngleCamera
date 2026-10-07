@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
@@ -35,17 +36,20 @@ public static class Hooks {
 	private static BindingFlags Private = BindingFlags.NonPublic;
 	private static BindingFlags Instance = BindingFlags.Instance;
 
-	private static ILHook _hook;
+	private static List<ILHook> _hooks;
 	private static BepInEx.Logging.ManualLogSource _logger;
 
 	public static void Hook(BepInEx.Logging.ManualLogSource logger) {
 		_logger = logger;
-		logger.LogInfo("Hooking this shit rn fr fr");
-		_hook = new ILHook(typeof(ENT_Player).GetMethod("SetCameraFov", Private | Instance), SetCameraFov);
+		logger.LogInfo("Hooking `ENT_Player::SetCameraFov`");
+		_hooks = new List<ILHook>(2);
+		_hooks.Add(new ILHook(GetMethod<ENT_Player>("SetCameraFov", Private | Instance), SetCameraFov));
 	}
 
 	public static void Unhook() {
-		_hook?.Dispose();
+		foreach (var hook in _hooks) {
+			hook.Dispose();
+		}
 	}
 
 	private static void SetCameraFov(ILContext il) {
@@ -62,5 +66,11 @@ public static class Hooks {
 		} else {
 			_logger.LogInfo("Failed to hook SetCameraFov");
 		}
+	}
+
+	// Helps to factor this out to make reading the patch list easier once there
+	// are multiple
+	private static MethodInfo GetMethod<T>(string name, BindingFlags flags) {
+		return typeof(T).GetMethod(name, flags);
 	}
 }
